@@ -29,6 +29,8 @@ public:
 
     // returns whether or not the point has been reached
     bool move_toward_point(const Vec3 &point, float dt);
+    bool move_toward_point_no_rot(const Vec3 &point, float dt);
+    bool move_toward_point_no_rot_hori(const Vec3 &point, float dt);
 
     const std::wstring &get_debug_name() const;
     std::wstringstream &get_debug_text();

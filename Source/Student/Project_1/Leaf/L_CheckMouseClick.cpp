@@ -18,7 +18,7 @@ void L_CheckMouseClick::on_update(float dt)
         const auto worldPos = renderer->screen_to_world(mousePos.x, mousePos.y, plane);
 
         // if the click point was actually on the plane
-        if (worldPos.second == true)
+        if (worldPos.second == true && worldPos.first.x <= 150)
         {
             // write the world position into the blackboard
             auto &bb = agent->get_blackboard();

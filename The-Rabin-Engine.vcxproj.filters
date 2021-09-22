@@ -316,6 +316,23 @@
     <ClInclude Include="Source\Framework\Agent\EnemyAgent.h">
       <Filter>Source\Framework\Agent</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_CheckQbScramble.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_QbContain.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_RushQb.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_FootballIdle.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_FinesseMove.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_RouteIn.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_RouteOut.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_RouteGo.h" />
+    <ClInclude Include="Source\Student\Project_1\ControlFlow\C_SmartRouteComposer.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_RouteSlant.h" />
+    <ClInclude Include="Source\Student\Project_1\Project1_States.h" />
+    <ClInclude Include="Source\Student\Project_1\Decorator\D_IfGameInPlay.h" />
+    <ClInclude Include="Source\Student\Project_1\Decorator\D_IfGetBlocked.h" />
+    <ClInclude Include="Source\Student\Project_1\Decorator\D_IfMouseClickFar.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_ThrowBall.h" />
+    <ClInclude Include="Source\Student\Project_1\Decorator\D_IfBallInAir.h" />
+    <ClInclude Include="Source\Student\Project_1\Leaf\L_Chaseball.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Framework\Main.cpp">
@@ -534,6 +551,22 @@
     <ClCompile Include="Source\Framework\Agent\EnemyAgent.cpp">
       <Filter>Source\Framework\Agent</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_CheckQbScramble.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_QbContain.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_RushQb.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_FootballIdle.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_FinesseMove.cpp" />
+    <ClCompile Include="Source\Student\Project_1\ControlFlow\C_SmartRouteComposer.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_RouteGo.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_RouteIn.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_RouteOut.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_RouteSlant.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Decorator\D_IfGameInPlay.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Decorator\D_IfGetBlocked.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Decorator\D_IfMouseClickFar.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_ThrowBall.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Decorator\D_IfBallInAir.cpp" />
+    <ClCompile Include="Source\Student\Project_1\Leaf\L_ChaseBall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

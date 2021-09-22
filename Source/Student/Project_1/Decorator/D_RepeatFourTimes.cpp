@@ -21,7 +21,7 @@ void D_RepeatFourTimes::on_update(float dt)
     {
         ++counter;
 
-        if (counter == 4)
+        if (counter == 2)
         {
             on_success();
         }

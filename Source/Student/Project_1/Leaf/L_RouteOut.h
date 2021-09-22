@@ -2,14 +2,11 @@
 #include "BehaviorNode.h"
 #include "Misc/NiceTypes.h"
 
-class L_MoveToMouseClick : public BaseNode<L_MoveToMouseClick>
+class L_RouteOut : public BaseNode<L_RouteOut>
 {
 protected:
     virtual void on_enter() override;
     virtual void on_update(float dt) override;
-    virtual void on_exit() override;
-
-    void set_game_state_in_game();
 
 private:
     Vec3 targetPoint;

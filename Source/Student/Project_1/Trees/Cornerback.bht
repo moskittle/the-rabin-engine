@@ -1,0 +1,4 @@
+TREENAME(Cornerback)
+TREENODE(C_Sequencer, 0)
+TREENODE(L_FootballIdle, 1)
+TREENODE(L_FootballIdle, 1)

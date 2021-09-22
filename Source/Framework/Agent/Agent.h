@@ -13,6 +13,8 @@ written consent of DigiPen Institute of Technology is prohibited.
 
 #pragma once
 #include "../Misc/NiceTypes.h"
+#include <string>
+#include "../Student/Project_1/Project1_States.h"
 
 // forward declarations
 class AgentOrganizer;
@@ -42,6 +44,9 @@ public:
 
     const char *get_type() const;
     const size_t &get_id() const;
+    const std::string& get_name() const;
+    const GameStates& get_game_state() const;
+    const BallStates& get_ball_state() const;
 
     float get_movement_speed() const;
 #pragma endregion
@@ -54,8 +59,14 @@ public:
     void set_pitch(float angleRadians);
     void set_yaw(float angleRadians);
     void set_roll(float angleRadians);
+    void set_pitch_directly(float angleRadians);
+    void set_yaw_directly(float angleRadians);
+    void set_roll_directly(float angleRadians);
 
     void set_color(const Vec3 &newColor);
+    void set_name(std::string _name);
+    void set_game_state(GameStates state);
+    void set_ball_state(BallStates state);
     
     void set_movement_speed(float speed);
 #pragma endregion
@@ -74,6 +85,10 @@ private:
     
     const char *type;
     const size_t id;
+
+    std::string name;
+    GameStates gameState = GameStates::PreSnap;
+    BallStates ballState = BallStates::PreSnap;
 
     float movementSpeed;
 

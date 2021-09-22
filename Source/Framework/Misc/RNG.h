@@ -39,6 +39,7 @@ public:
     static Vec3 unit_vector_3D();
     static Color color(float alpha = 1.0f);
     static Vec3 world_position();
+    static Vec3 near_position_in_range(Vec3 origin, float range);
 
     template <typename T>
     static const T &element(const std::vector<T> &vec);

@@ -85,6 +85,21 @@ const size_t &Agent::get_id() const
     return id;
 }
 
+const std::string& Agent::get_name() const
+{
+    return name;
+}
+
+const GameStates& Agent::get_game_state() const
+{
+    return gameState;
+}
+
+const BallStates& Agent::get_ball_state() const
+{
+    return ballState;
+}
+
 float Agent::get_movement_speed() const
 {
     return movementSpeed;
@@ -140,9 +155,39 @@ void Agent::set_roll(float angleRadians)
     isDirty = true;
 }
 
+void Agent::set_pitch_directly(float angleRadians)
+{
+    eulerAngles.x = angleRadians;
+}
+
+void Agent::set_yaw_directly(float angleRadians)
+{
+    eulerAngles.y = angleRadians;
+}
+
+void Agent::set_roll_directly(float angleRadians)
+{
+    eulerAngles.z = angleRadians;
+}
+
 void Agent::set_color(const Vec3 &newColor)
 {
     color = newColor;
+}
+
+void Agent::set_name(std::string _name)
+{
+    name = _name;
+}
+
+void Agent::set_game_state(GameStates state)
+{
+    gameState = state;
+}
+
+void Agent::set_ball_state(BallStates state)
+{
+    ballState = state;
 }
 
 void Agent::set_movement_speed(float speed)

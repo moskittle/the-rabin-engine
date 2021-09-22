@@ -130,3 +130,10 @@ Vec3 RNG::world_position()
     
     return Vec3(dist(generator), 0.0f, dist(generator));
 }
+
+Vec3 RNG::near_position_in_range(Vec3 origin, float range)
+{
+    const std::uniform_real_distribution<float> dist(-range, range);
+
+    return Vec3(origin.x + dist(generator), 0.0f, origin.z + dist(generator));
+}
