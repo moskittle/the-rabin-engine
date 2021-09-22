@@ -4,31 +4,17 @@
 void L_FinesseMove::on_enter()
 {
     originalScale = agent->get_scaling();
+
+    on_leaf_enter();
 }
 
 void L_FinesseMove::on_update(float dt)
 {
-    auto currYaw = agent->get_yaw();
-    agent->set_yaw(currYaw + (dt * rotateSpeed));
+    //auto currYaw = agent->get_yaw();
+    //agent->set_yaw(currYaw + (dt * rotateSpeed));
 
-    printf("finesse\n");
-
-    //auto scale3d = agent->get_scaling();
-    //auto scale = scale3d.x;
-    //auto breathe = breatheDir * dt;
-
-    //agent->set_scaling(scale + breathe);
-
-    //if (scale > 3.5)
-    //{
-    //    breatheDir *= -1;
-    //    agent->set_scaling(3.5);
-    //}
-    //else if (scale < 2.5)
-    //{
-    //    breatheDir *= -1;
-    //    agent->set_scaling(2.5);
-    //}
+    auto currYaw = agent->get_roll();
+    agent->set_roll(currYaw + (dt * rotateSpeed));
 
     if (timer < 0)
     {

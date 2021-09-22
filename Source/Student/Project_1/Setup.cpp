@@ -8,6 +8,9 @@ void ProjectOne::setup()
     // Create your inital agents
     //auto exampleAgent = agents->create_behavior_agent("ExampleAgent", BehaviorTreeTypes::Example);
 
+    Vec3 blueTeamColor = Vec3(0.1f, 0.1f, 0.8f);
+    Vec3 redTeamColor = Vec3(0.8f, 0.1f, 0.1f);
+
     auto game = agents->create_behavior_agent("Game Day", BehaviorTreeTypes::GameState);
     game->set_scaling(0.01);
     game->set_color(Vec3(0, 0, 0));
@@ -23,24 +26,26 @@ void ProjectOne::setup()
     auto leftOT = agents->create_behavior_agent("Offensive Tackle", BehaviorTreeTypes::OLineman);
     leftOT->set_name("OT");
     leftOT->set_position(Vec3(35.0f, 0.0f, 50.0f));
-    leftOT->set_color(Vec3(1, 0, 0));
+    leftOT->set_color(blueTeamColor);
     leftOT->set_yaw(-1.8);
     
     auto qb = agents->create_behavior_agent("Quarterback", BehaviorTreeTypes::Quarterback);
     qb->set_name("QB");
     qb->set_position(Vec3(20.0f, 0.0f, 50.0f));
-    qb->set_color(Vec3(0, 0, 0.7));
+    qb->set_color(blueTeamColor);
     qb->set_yaw(-1.8);
 
     auto mlb = agents->create_behavior_agent("Middle Linebacker", BehaviorTreeTypes::Linebacker);
     mlb->set_name("MLB");
     mlb->set_position(Vec3(50.0f, 0.0f, 50.0f));
+    mlb->set_color(redTeamColor);
     mlb->set_yaw(-1.8);
     auto& mlb_bb = mlb->get_blackboard();
     mlb_bb.set_value("Move Speed", 5.0f);
 
     auto wr = agents->create_behavior_agent("Receiver", BehaviorTreeTypes::Receiver);
     wr->set_name("WR");
+    wr->set_color(blueTeamColor);
     wr->set_position(Vec3(35.0f, 0.0f, 75.0f));
     wr->set_yaw(-1.8);
 
