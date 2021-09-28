@@ -333,6 +333,7 @@
     <ClInclude Include="Source\Student\Project_1\Leaf\L_ThrowBall.h" />
     <ClInclude Include="Source\Student\Project_1\Decorator\D_IfBallInAir.h" />
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Chaseball.h" />
+    <ClInclude Include="Source\Student\Project_2\AStarNode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Framework\Main.cpp">
@@ -567,6 +568,7 @@
     <ClCompile Include="Source\Student\Project_1\Leaf\L_ThrowBall.cpp" />
     <ClCompile Include="Source\Student\Project_1\Decorator\D_IfBallInAir.cpp" />
     <ClCompile Include="Source\Student\Project_1\Leaf\L_ChaseBall.cpp" />
+    <ClCompile Include="Source\Student\Project_2\AStarNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

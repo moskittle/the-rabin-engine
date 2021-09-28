@@ -35,8 +35,19 @@ bool AStarPather::initialize()
         object that std::function can wrap will suffice.
     */
 
+    Callback mapChangeCb = std::bind(&AStarPather::mapChangeCallback, this);
+    Messenger::listen_for_message(Messages::MAP_CHANGE, mapChangeCb);
+
     return true; // return false if any errors actually occur, to stop engine initialization
 }
+
+void AStarPather::mapChangeCallback()
+{
+    mapWidth = terrain->get_map_width();
+    mapHeight = terrain->get_map_height();
+}
+
+
 
 void AStarPather::shutdown()
 {
@@ -82,13 +93,66 @@ PathResult AStarPather::compute_path(PathRequest &request)
 
     // WRITE YOUR CODE HERE
 
-    
-    // Just sample code, safe to delete
+    //AStarNode(GridPos _gridPos, std::shared_ptr<AStarNode> _parent,
+    //    std::vector<std::shared_ptr<AStarNode>> _neighbors,
+    //    float _finalCost, AStarNodeState _state);
+
     GridPos start = terrain->get_grid_position(request.start);
     GridPos goal = terrain->get_grid_position(request.goal);
-    terrain->set_color(start, Colors::Orange);
-    terrain->set_color(goal, Colors::Orange);
+
+    auto currentPos = start;
+    std::shared_ptr<AStarNode> root = std::make_shared<AStarNode>(currentPos, nullptr);
+    auto neighbors = addNeighbors(goal);
+    //openList.insert()
+    
+
+    terrain->set_color(start, Colors::Coral);
+    terrain->set_color(goal, Colors::Cyan);
     request.path.push_back(request.start);
     request.path.push_back(request.goal);
     return PathResult::COMPLETE;
+}
+
+std::shared_ptr<AStarNode> AStarPather::getMinCostNode(const std::set<std::shared_ptr<AStarNode>>& list)
+{
+    if (!list.empty())
+    {
+        return *list.begin();
+    }
+
+    return nullptr;
+}
+
+std::vector<GridPos> AStarPather::addNeighbors(GridPos pos)
+{
+    // find 8 neighbors
+    int leftBound = pos.row - 1;
+    int rightBound = pos.row + 1;
+    int bottomBound = pos.col- 1;
+    int upperBound = pos.col + 1;
+
+    std::vector<GridPos> neighbors;
+
+    for (int j = bottomBound; j <= upperBound; ++j)
+    {
+        if (j < 0 || j > mapHeight) { continue; }
+
+        for (int i = leftBound; i <= rightBound; ++i)
+        {
+            if (i < 0 || i > mapWidth) { continue; }
+
+            if (terrain->is_wall(i, j)) { continue; }
+
+            // TODO: the grid XY is messed up
+            //if ()
+
+            GridPos neighbor;
+            neighbor.row = i;
+            neighbor.col = j;
+
+            neighbors.push_back(neighbor);
+        }
+    }
+
+    return neighbors;
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Misc/PathfindingDetails.hpp"
+#include "AStarNode.h"
 
 class AStarPather
 {
@@ -23,4 +24,13 @@ public:
         makes sense to you.
     */
 
+private:
+    std::shared_ptr<AStarNode> getMinCostNode(const std::set<std::shared_ptr<AStarNode>>& list);
+    std::vector<GridPos> addNeighbors(GridPos pos);
+    void mapChangeCallback();
+
+    std::set<std::shared_ptr<AStarNode>> openList;
+    std::set<std::shared_ptr<AStarNode>> closeList;
+
+    int mapWidth, mapHeight;
 };
