@@ -33,49 +33,52 @@ extern const Vec3 globalRight;
 extern const Vec3 globalForward;
 
 template <typename T>
-using Setter = std::function<void(const T &)>;
+using Setter = std::function<void(const T&)>;
 
 template <typename T>
 using Getter = std::function<typename T(void)>;
 
-using TextGetter = std::function<const std::wstring &(void)>;
+using TextGetter = std::function<const std::wstring& (void)>;
 
 struct WindowPos
 {
-    int x;
-    int y;
+	int x;
+	int y;
 
-    WindowPos operator+(const WindowPos &rhs) const
-    {
-        return WindowPos { x + rhs.x, y + rhs.y };
-    }
+	WindowPos operator+(const WindowPos& rhs) const
+	{
+		return WindowPos{ x + rhs.x, y + rhs.y };
+	}
 
-    WindowPos operator-(const WindowPos &rhs) const
-    {
-        return WindowPos { x - rhs.x, y - rhs.y };
-    }
+	WindowPos operator-(const WindowPos& rhs) const
+	{
+		return WindowPos{ x - rhs.x, y - rhs.y };
+	}
 };
 
 struct GridPos
 {
-    int row;
-    int col;
+	int row;
+	int col;
 
-    bool operator==(const GridPos &rhs) const
-    {
-        return row == rhs.row && col == rhs.col;
-    }
+	GridPos() = default;
+	GridPos(int _row, int _col) : row(_row), col(_col) {}
 
-    bool operator!=(const GridPos &rhs) const
-    {
-        return row != rhs.row || col != rhs.col;
-    }
+	bool operator==(const GridPos& rhs) const
+	{
+		return row == rhs.row && col == rhs.col;
+	}
+
+	bool operator!=(const GridPos& rhs) const
+	{
+		return row != rhs.row || col != rhs.col;
+	}
 };
 
 struct WindowSize
 {
-    int width;
-    int height;
+	int width;
+	int height;
 };
 
 // DXTK introduced the explicit specifier to the XMVECTORF32 conversion
@@ -85,20 +88,20 @@ struct WindowSize
 // https://github.com/Microsoft/DirectXTK/wiki/Color
 struct Color : public DirectX::SimpleMath::Color
 {
-    using DirectX::SimpleMath::Color::Color;
-    Color(const DirectX::XMVECTORF32& F)
-      : DirectX::SimpleMath::Color::Color(F)
-    {
-    }
+	using DirectX::SimpleMath::Color::Color;
+	Color(const DirectX::XMVECTORF32& F)
+		: DirectX::SimpleMath::Color::Color(F)
+	{
+	}
 
-    // avoid implicit conversion to float * when comparing with XMVECTORF32
-    bool operator == (const DirectX::XMVECTORF32& F) const
-    {
-      return static_cast<DirectX::SimpleMath::Color>(*this) == DirectX::SimpleMath::Color::Color(F);
-    }
+	// avoid implicit conversion to float * when comparing with XMVECTORF32
+	bool operator == (const DirectX::XMVECTORF32& F) const
+	{
+		return static_cast<DirectX::SimpleMath::Color>(*this) == DirectX::SimpleMath::Color::Color(F);
+	}
 
-    bool operator != (const DirectX::XMVECTORF32& F) const
-    {
-      return static_cast<DirectX::SimpleMath::Color>(*this) != DirectX::SimpleMath::Color::Color(F);
-    }
+	bool operator != (const DirectX::XMVECTORF32& F) const
+	{
+		return static_cast<DirectX::SimpleMath::Color>(*this) != DirectX::SimpleMath::Color::Color(F);
+	}
 };

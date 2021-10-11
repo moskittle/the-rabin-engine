@@ -20,33 +20,33 @@ written consent of DigiPen Institute of Technology is prohibited.
 class ProjectTwo final : public Project
 {
 public:
-    virtual bool initialize() override final;
-    virtual bool finalize() override final;
-    virtual void shutdown() override final;
+	virtual bool initialize() override final;
+	virtual bool finalize() override final;
+	virtual void shutdown() override final;
 
-    virtual void draw_meshes() override final;
-    virtual void draw_sprites() override final;
-    virtual void draw_text() override final;
-    virtual void draw_debug() override final;
+	virtual void draw_meshes() override final;
+	virtual void draw_sprites() override final;
+	virtual void draw_text() override final;
+	virtual void draw_debug() override final;
 
-    virtual void update() override final;
+	virtual void update() override final;
 
-    static bool implemented_floyd_warshall();
-    static bool implemented_goal_bounding();
-    static bool implemented_jps_plus();
+	static bool implemented_floyd_warshall();
+	static bool implemented_goal_bounding();
+	static bool implemented_jps_plus();
 
 private:
-    AStarAgent *agent;
-    PathTester tester;
-    bool testRunning;
+	AStarAgent* agent;
+	PathTester tester;
+	bool testRunning;
 
-    void build_ui();
-    void link_input();
+	void build_ui();
+	void link_input();
 
-    void on_left_mouse_click();
-    void on_f1();
-    void on_f3();
+	void on_left_mouse_click();
+	void on_f1();
+	void on_f3();
 
-    void on_test_begin();
-    void on_test_end();
+	void on_test_begin();
+	void on_test_end();
 };
