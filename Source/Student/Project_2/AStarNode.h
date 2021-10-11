@@ -28,6 +28,6 @@ private:
 	GridPos gridPos;
 	std::shared_ptr<AStarNode> parent;
 	float givenCost;
-	// float heuristic cost;	// TODO: save heuristic cost --optimization
+	// float heuristiCost;	// TODO: save heuristic cost --optimization
 	AStarNodeState state;
 };

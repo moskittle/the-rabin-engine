@@ -1,6 +1,7 @@
 #pragma once
 #include "Misc/PathfindingDetails.hpp"
 #include "AStarNode.h"
+#include <stack>
 
 class AStarPather
 {
@@ -25,7 +26,9 @@ public:
 	*/
 
 	void precompute_heuristic_costs();
-	float evaluate_heuristic_cost(const GridPos& start, const GridPos& destination);
+	float evaluate_heuristic_cost(const GridPos& start, const GridPos& destination, Heuristic type);
+	float heuristic_octile(const GridPos& start, const GridPos& destination);
+
 private:
 	std::shared_ptr<AStarNode> get_min_cost_node_in_openlist();
 	std::vector<std::shared_ptr<AStarNode>> get_neighbors(std::shared_ptr<AStarNode> node); // TODO: compute all heuristic
@@ -36,7 +39,7 @@ private:
 	void move_from_open_to_close_list(std::shared_ptr<AStarNode> node);
 	//void add_to_close_list(std::shared_ptr<AStarNode> node);
 	void remove_from_close_list(std::shared_ptr<AStarNode> node);
-	void generate_path(std::shared_ptr<AStarNode> finalNode);
+	void generate_path(std::shared_ptr<AStarNode> finalNode, PathRequest& request);
 
 	std::set<std::shared_ptr<AStarNode>>::const_iterator find_node_in_list(const std::set<std::shared_ptr<AStarNode>>& list, std::shared_ptr<AStarNode> node);
 	//bool is_on_open_list(std::shared_ptr<AStarNode> node);

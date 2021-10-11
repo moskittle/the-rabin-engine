@@ -2,6 +2,7 @@
 #include "Projects/ProjectTwo.h"
 #include "P2_Pathfinding.h"
 
+
 #pragma region Extra Credit
 bool ProjectTwo::implemented_floyd_warshall()
 {
@@ -56,7 +57,7 @@ void AStarPather::add_to_open_list(std::shared_ptr<AStarNode> node)
 {
 	openList.insert(node);
 	node->set_state(AStarNodeState::OpenList);
-	terrain->set_color(node->get_grid_pos(), Colors::Aqua);
+	terrain->set_color(node->get_grid_pos(), Colors::Blue);
 }
 
 void AStarPather::remove_from_open_list(std::shared_ptr<AStarNode> node)
@@ -71,7 +72,7 @@ void AStarPather::move_from_open_to_close_list(std::shared_ptr<AStarNode> node)
 	openList.erase(node);
 	closeList.insert(node);
 	node->set_state(AStarNodeState::CloseList);
-	terrain->set_color(node->get_grid_pos(), Colors::Red);
+	terrain->set_color(node->get_grid_pos(), Colors::Yellow);
 }
 
 //void AStarPather::add_to_close_list(std::shared_ptr<AStarNode> node)
@@ -88,9 +89,28 @@ void AStarPather::remove_from_close_list(std::shared_ptr<AStarNode> node)
 	terrain->set_color(node->get_grid_pos(), Colors::White);
 }
 
-void AStarPather::generate_path(std::shared_ptr<AStarNode> finalNode)
+void AStarPather::generate_path(std::shared_ptr<AStarNode> finalNode, PathRequest& request)
 {
+	auto curr = finalNode;
+	std::stack<std::shared_ptr<AStarNode>> pathNodes({ curr });
+	while (curr->get_parent())
+	{
+		auto parent = curr->get_parent();
+		auto itr = find_node_in_list(closeList, parent);
+		assert(*itr);
 
+		curr = *itr;
+		pathNodes.push(curr);
+	}
+
+
+	while (!pathNodes.empty())
+	{
+		auto curr = pathNodes.top();
+		pathNodes.pop();
+
+		request.path.push_back(terrain->get_world_position(curr->get_grid_pos()));
+	}
 }
 
 std::set<std::shared_ptr<AStarNode>>::const_iterator AStarPather::find_node_in_list(const std::set<std::shared_ptr<AStarNode>>& list, std::shared_ptr<AStarNode> node)
@@ -162,10 +182,6 @@ PathResult AStarPather::compute_path(PathRequest& request)
 
 	// WRITE YOUR CODE HERE
 
-	//AStarNode(GridPos _gridPos, std::shared_ptr<AStarNode> _parent,
-	//    std::vector<std::shared_ptr<AStarNode>> _neighbors,
-	//    float _finalCost, AStarNodeState _state);
-
 	if (request.newRequest)
 	{
 		openList.clear();
@@ -175,7 +191,7 @@ PathResult AStarPather::compute_path(PathRequest& request)
 	GridPos start = terrain->get_grid_position(request.start);
 	GridPos goal = terrain->get_grid_position(request.goal);
 
-	auto heuristicCost = evaluate_heuristic_cost(start, goal);
+	auto heuristicCost = evaluate_heuristic_cost(start, goal, Heuristic::OCTILE);
 	auto startNode = std::make_shared<AStarNode>(start, nullptr, 0.0f, AStarNodeState::NotOnList);
 
 	openList.insert(startNode);
@@ -187,8 +203,9 @@ PathResult AStarPather::compute_path(PathRequest& request)
 		if (minCostNode->get_grid_pos() == goal)
 		{
 			// generate path
-			// generate_path();
-			printf("found path");
+			printf("found path\n");
+			generate_path(minCostNode, request);
+
 
 			return PathResult::COMPLETE;
 		}
@@ -207,7 +224,7 @@ PathResult AStarPather::compute_path(PathRequest& request)
 			}
 			else
 			{
-				auto neighborFinalCost = neighbor->get_given_cost() + evaluate_heuristic_cost(neighbor->get_grid_pos(), goal);
+				auto neighborFinalCost = neighbor->get_given_cost() + evaluate_heuristic_cost(neighbor->get_grid_pos(), goal, Heuristic::OCTILE);
 
 
 				std::shared_ptr<AStarNode> neighborOnOpenList, neighborOnCloseList;
@@ -218,7 +235,7 @@ PathResult AStarPather::compute_path(PathRequest& request)
 					if (targetItr != openList.end())
 					{
 						neighborOnOpenList = *targetItr;
-						auto originalFinalCost = neighborOnOpenList->get_given_cost() + evaluate_heuristic_cost(neighborOnOpenList->get_grid_pos(), goal);
+						auto originalFinalCost = neighborOnOpenList->get_given_cost() + evaluate_heuristic_cost(neighborOnOpenList->get_grid_pos(), goal, Heuristic::OCTILE);
 						if (neighborFinalCost < originalFinalCost)
 						{
 							remove_from_open_list(neighborOnOpenList);
@@ -234,10 +251,10 @@ PathResult AStarPather::compute_path(PathRequest& request)
 					if (targetIter != closeList.end())
 					{
 						neighborOnCloseList = *targetIter;
-						auto originalFinalCost = neighborOnCloseList->get_given_cost() + evaluate_heuristic_cost(neighborOnCloseList->get_grid_pos(), goal);
+						auto originalFinalCost = neighborOnCloseList->get_given_cost() + evaluate_heuristic_cost(neighborOnCloseList->get_grid_pos(), goal, Heuristic::OCTILE);
 						if (neighborFinalCost < originalFinalCost)
 						{
-							remove_from_close_list(neighborOnCloseList);
+							//remove_from_close_list(neighborOnCloseList);
 						}
 					}
 				}
@@ -252,6 +269,21 @@ PathResult AStarPather::compute_path(PathRequest& request)
 	terrain->set_color(goal, Colors::Cyan);
 	request.path.push_back(request.start);
 	request.path.push_back(request.goal);
+
+
+
+
+	// TODO: -- more features
+	if (request.settings.rubberBanding) {}
+	if (request.settings.smoothing) {}
+
+
+
+
+
+
+
+
 	return PathResult::COMPLETE;
 }
 
@@ -272,8 +304,24 @@ void AStarPather::precompute_heuristic_costs()
 	//}
 }
 
-float AStarPather::evaluate_heuristic_cost(const GridPos& start, const GridPos& destination)
+float AStarPather::evaluate_heuristic_cost(const GridPos& start, const GridPos& destination, Heuristic type)
 {
+	switch (type)
+	{
+	case Heuristic::OCTILE:
+		break;
+	case Heuristic::CHEBYSHEV:
+		break;
+	case Heuristic::MANHATTAN:
+		break;
+	case Heuristic::EUCLIDEAN:
+		break;
+	case Heuristic::NUM_ENTRIES:
+		break;
+	default:
+		break;
+	}
+
 	int xDiff = destination.row - start.row;
 	int yDiff = destination.col - start.col;
 	float squaredSum = static_cast<float>(xDiff * xDiff + yDiff * yDiff);
