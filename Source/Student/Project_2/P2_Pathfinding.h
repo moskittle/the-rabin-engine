@@ -27,8 +27,11 @@ public:
 	*/
 
 	std::vector<NodePtr> get_neighbors(NodePtr minNode);
-	float calc_heuristic_cost(Heuristic type, GridPos start, GridPos end);
+	float calc_heuristic_cost(GridPos start, GridPos end, Heuristic type = Heuristic::OCTILE);
 
 	std::priority_queue<NodePtr> openList;
+	GridPos start;
+	GridPos goal;
+	Heuristic heuristicMode = Heuristic::MANHATTAN;
 
 };

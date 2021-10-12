@@ -81,14 +81,17 @@ PathResult AStarPather::compute_path(PathRequest& request)
 	*/
 
 	// WRITE YOUR CODE HERE
-	GridPos start = terrain->get_grid_position(request.start);
-	GridPos goal = terrain->get_grid_position(request.goal);
+	start = terrain->get_grid_position(request.start);
+	start = GridPos(1, 2);
+	goal = terrain->get_grid_position(request.goal);
 
 	NodePtr startNode = std::make_shared<Node>();
 	NodePtr endNode = std::make_shared<Node>();
 	startNode->position = start;
 	endNode->position = goal;
-	startNode->heuristicCost = calc_heuristic_cost(Heuristic::MANHATTAN, startNode->position, endNode->position);
+
+	startNode->givenCost = 0.0f;
+	startNode->heuristicCost = calc_heuristic_cost(startNode->position, endNode->position, heuristicMode);
 	endNode->heuristicCost = 0.0f;
 
 
@@ -109,7 +112,6 @@ PathResult AStarPather::compute_path(PathRequest& request)
 		// process neighbors
 		auto neighbors = get_neighbors(minNode);
 
-		printf("neighbor size: %d\n", (int)neighbors.size());
 
 	}
 
@@ -134,15 +136,15 @@ std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
 
 	GridPos currPos = currNode->position;
 
-	int botBound = currPos.col - 1, upBound = currPos.col + 1,
-		leftBound = currPos.row - 1, rightBound = currPos.row + 1;
+	int botBound = currPos.row - 1, upBound = currPos.row + 1,
+		leftBound = currPos.col - 1, rightBound = currPos.col + 1;
 
 
 	// check hori & vert first
-	GridPos upPos(currPos.row, currPos.col + 1);
-	GridPos botPos(currPos.row, currPos.col - 1);
-	GridPos leftPos(currPos.row, currPos.row - 1);
-	GridPos rightPos(currPos.row, currPos.row + 1);
+	GridPos upPos(currPos.row + 1, currPos.col);
+	GridPos botPos(currPos.row - 1, currPos.col);
+	GridPos leftPos(currPos.row, currPos.col - 1);
+	GridPos rightPos(currPos.row, currPos.col + 1);
 
 	if (!terrain->is_valid_grid_position(upPos) || terrain->is_wall(upPos)) { upBound -= 1; }
 	if (!terrain->is_valid_grid_position(botPos) || terrain->is_wall(botPos)) { botBound += 1; }
@@ -160,6 +162,7 @@ std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
 			bool isDiagonal = abs(neighborPos.row - currPos.row) + abs(neighborPos.col - currPos.col) == 2;
 			float givenCost = isDiagonal ? 1.41f : 1.0f;
 			NodePtr newNeighbor = std::make_shared<Node>(neighborPos, currNode->givenCost + givenCost, currNode);
+			newNeighbor->heuristicCost = calc_heuristic_cost(neighborPos, goal, heuristicMode);
 
 			result.push_back(newNeighbor);
 		}
@@ -168,7 +171,7 @@ std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
 	return result;
 }
 
-float AStarPather::calc_heuristic_cost(Heuristic type, GridPos start, GridPos end)
+float AStarPather::calc_heuristic_cost(GridPos start, GridPos end, Heuristic type)
 {
 	float xDiff = static_cast<float>(abs(start.row - end.row));
 	float yDiff = static_cast<float>(abs(start.col - end.col));
