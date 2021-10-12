@@ -1,5 +1,8 @@
 #pragma once
 #include "Misc/PathfindingDetails.hpp"
+#include "Node.h"
+
+using NodePtr = std::shared_ptr<Node>;
 
 class AStarPather
 {
@@ -22,5 +25,10 @@ public:
 		It doesn't all need to be in this header and cpp, structure it whatever way
 		makes sense to you.
 	*/
+
+	std::vector<NodePtr> get_neighbors(NodePtr minNode);
+	float calc_heuristic_cost(Heuristic type, GridPos start, GridPos end);
+
+	std::priority_queue<NodePtr> openList;
 
 };
