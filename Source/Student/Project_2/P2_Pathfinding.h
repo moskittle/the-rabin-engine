@@ -28,6 +28,7 @@ public:
 
 	std::vector<NodePtr> get_neighbors(NodePtr minNode);	// TODO:  swap tail and pre allocate --optimization
 	float calc_heuristic_cost(GridPos start, GridPos end, Heuristic type = Heuristic::OCTILE);
+	float calc_final_cost(NodePtr node);
 	void sort_list(std::vector<NodePtr>& list);
 	std::vector<GridPos> generate_waypoints(NodePtr goal);
 
@@ -36,4 +37,6 @@ public:
 	GridPos start;
 	GridPos goal;
 	Heuristic heuristicMode = Heuristic::OCTILE;
+	float weight = 1.0f;
+	std::function<bool(NodePtr a, NodePtr b)> nodeComparor;
 };

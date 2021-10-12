@@ -19,6 +19,9 @@ bool ProjectTwo::implemented_jps_plus()
 }
 #pragma endregion
 
+
+#define DEBUG_COLORING(node, color, toggle) if(toggle) { terrain->set_color(node, color); }
+
 bool AStarPather::initialize()
 {
 	// handle any one-time setup requirements you have
@@ -39,6 +42,8 @@ bool AStarPather::initialize()
 	//Callback cb = std::bind(&AStarPather::pre_compute_neighbors, this);
 	//Messenger::listen_for_message(Messages::MAP_CHANGE, cb);
 
+	nodeComparor = [this](NodePtr a, NodePtr b) { return a->getFinalCost(weight) > b->getFinalCost(weight); };
+
 	return true; // return false if any errors actually occur, to stop engine initialization
 }
 
@@ -48,16 +53,6 @@ void AStarPather::shutdown()
 		Free any dynamically allocated memory or any other general house-
 		keeping you need to do during shutdown.
 	*/
-}
-
-// TODO: -remove
-void printVector(std::vector<NodePtr> list)
-{
-	for (auto node : list)
-	{
-		printf("%f, ", node->getFinalCost());
-	}
-	printf("\n");
 }
 
 PathResult AStarPather::compute_path(PathRequest& request)
@@ -94,21 +89,22 @@ PathResult AStarPather::compute_path(PathRequest& request)
 			IMPOSSIBLE - a path from start to goal does not exist, do not add start position to path
 	*/
 
-	// WRITE YOUR CODE HERE
+
+
 	if (request.newRequest)
 	{
-
+		openList.clear();
+		closeList.clear();
 	}
 	heuristicMode = request.settings.heuristic;
+	weight = request.settings.weight;
 
-	openList.clear();
-	closeList.clear();
 
 
 	start = terrain->get_grid_position(request.start);
 	goal = terrain->get_grid_position(request.goal);
-	terrain->set_color(start, Colors::Orange);
-	terrain->set_color(goal, Colors::Cyan);
+	DEBUG_COLORING(start, Colors::Orange, request.settings.debugColoring);
+	DEBUG_COLORING(goal, Colors::Cyan, request.settings.debugColoring);
 
 	NodePtr startNode = std::make_shared<Node>();
 	NodePtr endNode = std::make_shared<Node>();
@@ -128,7 +124,7 @@ PathResult AStarPather::compute_path(PathRequest& request)
 		auto minNode = openList.back();
 		openList.pop_back();
 		closeList.push_back(minNode);
-		terrain->set_color(minNode->position, Colors::Yellow);
+		DEBUG_COLORING(minNode->position, Colors::Yellow, request.settings.debugColoring);
 
 		// path is found.
 		if (minNode->position == goal)
@@ -148,22 +144,24 @@ PathResult AStarPather::compute_path(PathRequest& request)
 		auto neighbors = get_neighbors(minNode);
 		for (auto neighbor : neighbors)
 		{
-			auto itrOpen = std::find_if(openList.begin(), openList.end(), [neighbor](NodePtr node) { return node->position == neighbor->position; });
+			auto searchComparor = [neighbor](NodePtr node) { return node->position == neighbor->position; };
+
+			auto itrOpen = std::find_if(openList.begin(), openList.end(), searchComparor);
 			bool isOnOpenList = itrOpen != openList.end();
-			auto itrClose = std::find_if(closeList.begin(), closeList.end(), [neighbor](NodePtr node) { return node->position == neighbor->position; });
+			auto itrClose = std::find_if(closeList.begin(), closeList.end(), searchComparor);
 			bool isOnCloseList = itrClose != closeList.end();
 
 			if (!isOnOpenList && !isOnCloseList)
 			{
 				openList.push_back(neighbor);
-				terrain->set_color(neighbor->position, Colors::Blue);
+				DEBUG_COLORING(neighbor->position, Colors::Blue, request.settings.debugColoring);
 			}
 			else
 			{
 				if (isOnOpenList)
 				{
 					auto& nodeOnlist = *itrOpen;
-					if (neighbor->getFinalCost() < nodeOnlist->getFinalCost())
+					if (calc_final_cost(neighbor) < calc_final_cost(nodeOnlist))
 					{
 						nodeOnlist->givenCost = neighbor->givenCost;
 						nodeOnlist->parent = neighbor->parent;
@@ -173,7 +171,7 @@ PathResult AStarPather::compute_path(PathRequest& request)
 				if (isOnCloseList)
 				{
 					auto& nodeOnlist = *itrClose;
-					if (neighbor->getFinalCost() < nodeOnlist->getFinalCost())
+					if (calc_final_cost(neighbor) < calc_final_cost(nodeOnlist))
 					{
 						nodeOnlist->givenCost = neighbor->givenCost;
 						nodeOnlist->parent = neighbor->parent;
@@ -231,8 +229,6 @@ std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
 	return result;
 }
 
-#define SQRT_2 1.414f
-
 float AStarPather::calc_heuristic_cost(GridPos start, GridPos end, Heuristic type)
 {
 	float xDiff = static_cast<float>(abs(start.row - end.row));
@@ -256,9 +252,14 @@ float AStarPather::calc_heuristic_cost(GridPos start, GridPos end, Heuristic typ
 	return -1.0f;
 }
 
+float AStarPather::calc_final_cost(NodePtr node)
+{
+	return node->givenCost + node->heuristicCost * weight;
+}
+
 void AStarPather::sort_list(std::vector<NodePtr>& list)
 {
-	std::make_heap(list.begin(), list.end(), NodeComparer());
+	std::make_heap(list.begin(), list.end(), nodeComparor);
 }
 
 std::vector<GridPos> AStarPather::generate_waypoints(NodePtr goal)

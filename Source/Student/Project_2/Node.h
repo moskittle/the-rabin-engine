@@ -15,7 +15,7 @@ public:
 	//float get_givenCost() { return givenCost; }
 	//float get_heuristicCost() { return heuristicCost; }
 	//float get_finalCost() { return givenCost + heuristicCost; }
-	float getFinalCost() { return givenCost + heuristicCost; }
+	float getFinalCost(float weight) { return givenCost + heuristicCost * weight; }
 
 	bool operator< (const Node& other)const
 	{
@@ -28,12 +28,4 @@ public:
 	float heuristicCost = -1.0f;
 	std::shared_ptr<Node> parent = nullptr;
 	//bool isOnList = false;
-};
-
-struct NodeComparer
-{
-	bool operator()(std::shared_ptr<Node> a, std::shared_ptr<Node>& b) const
-	{
-		return a->getFinalCost() > b->getFinalCost();
-	}
 };
