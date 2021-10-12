@@ -128,16 +128,16 @@ PathResult AStarPather::compute_path(PathRequest& request)
 		if (minNode->position == goal)
 		{
 			//auto 
-			std::vector<GridPos> waypoints = generate_waypoints(minNode);
+			std::list<GridPos> waypoints = generate_waypoints(minNode);
+
+			if (request.settings.rubberBanding)
+			{
+				rubberband(waypoints);
+			}
 
 			for (auto waypoint : waypoints)
 			{
 				request.path.push_back(terrain->get_world_position(waypoint));
-			}
-
-			if (request.settings.rubberBanding)
-			{
-
 			}
 
 			return PathResult::COMPLETE;
@@ -269,18 +269,68 @@ void AStarPather::sort_list(std::vector<NodePtr>& list)
 	std::make_heap(list.begin(), list.end(), nodeComparor);
 }
 
-std::vector<GridPos> AStarPather::generate_waypoints(NodePtr goal)
+std::list<GridPos> AStarPather::generate_waypoints(NodePtr goal)
 {
-	std::vector<GridPos> waypoints;
+	std::list<GridPos> waypoints;
 
 	auto currNode = goal;
 	while (currNode)
 	{
-		waypoints.push_back(currNode->position);
+		waypoints.push_front(currNode->position);
 		currNode = currNode->parent;
 	}
 
-	std::reverse(waypoints.begin(), waypoints.end());
-
 	return waypoints;
+}
+
+void AStarPather::rubberband(std::list<GridPos>& waypoints)
+{
+	auto count = waypoints.size();
+
+	//for (int i = 1; i < count - 2; )
+
+	GridPos pos;
+	auto current = waypoints.begin();
+	current++;
+	while (std::next(current, 1) != waypoints.end())
+	{
+		bool thereIsAWall = false;
+
+		auto prevPos = *std::prev(current, 1);
+		auto currPos = *current;
+		auto nextPos = *std::next(current, 1);
+
+		auto leftBound = std::min(prevPos.col, std::min(currPos.col, nextPos.col));
+		auto rightBound = std::max(prevPos.col, std::max(currPos.col, nextPos.col));
+		auto botBound = std::min(prevPos.row, std::min(currPos.row, nextPos.row));
+		auto topBound = std::max(prevPos.row, std::max(currPos.row, nextPos.row));
+
+
+		for (auto i = leftBound; i <= rightBound; ++i)
+		{
+			for (auto j = botBound; j <= topBound; ++j)
+			{
+				pos.col = i;
+				pos.row = j;
+
+				if (terrain->is_wall(pos))
+				{
+					thereIsAWall = true;
+					break;
+				}
+			}
+
+			if (thereIsAWall) { break; }
+		}
+
+		if (!thereIsAWall)
+		{
+			waypoints.erase(current++);
+		}
+		else
+		{
+			++current;
+		}
+
+	}
 }
