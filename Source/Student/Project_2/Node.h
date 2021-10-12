@@ -2,6 +2,7 @@
 
 #include "pch.h"
 
+
 class Node
 {
 public:
@@ -14,10 +15,11 @@ public:
 	//float get_givenCost() { return givenCost; }
 	//float get_heuristicCost() { return heuristicCost; }
 	//float get_finalCost() { return givenCost + heuristicCost; }
+	float getFinalCost() { return givenCost + heuristicCost; }
 
 	bool operator< (const Node& other)const
 	{
-		return givenCost + heuristicCost < other.givenCost + other.heuristicCost;
+		return givenCost + heuristicCost > other.givenCost + other.heuristicCost;
 	}
 
 	//private:
@@ -28,3 +30,10 @@ public:
 	//bool isOnList = false;
 };
 
+struct NodeComparer
+{
+	bool operator()(std::shared_ptr<Node> a, std::shared_ptr<Node>& b) const
+	{
+		return a->getFinalCost() > b->getFinalCost();
+	}
+};

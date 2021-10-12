@@ -35,6 +35,10 @@ bool AStarPather::initialize()
 		object that std::function can wrap will suffice.
 	*/
 
+	// TODO: --precompute neighbors optimization
+	//Callback cb = std::bind(&AStarPather::pre_compute_neighbors, this);
+	//Messenger::listen_for_message(Messages::MAP_CHANGE, cb);
+
 	return true; // return false if any errors actually occur, to stop engine initialization
 }
 
@@ -44,6 +48,16 @@ void AStarPather::shutdown()
 		Free any dynamically allocated memory or any other general house-
 		keeping you need to do during shutdown.
 	*/
+}
+
+// TODO: -remove
+void printVector(std::vector<NodePtr> list)
+{
+	for (auto node : list)
+	{
+		printf("%f, ", node->getFinalCost());
+	}
+	printf("\n");
 }
 
 PathResult AStarPather::compute_path(PathRequest& request)
@@ -81,9 +95,20 @@ PathResult AStarPather::compute_path(PathRequest& request)
 	*/
 
 	// WRITE YOUR CODE HERE
+	if (request.newRequest)
+	{
+
+	}
+	heuristicMode = request.settings.heuristic;
+
+	openList.clear();
+	closeList.clear();
+
+
 	start = terrain->get_grid_position(request.start);
-	start = GridPos(1, 2);
 	goal = terrain->get_grid_position(request.goal);
+	terrain->set_color(start, Colors::Orange);
+	terrain->set_color(goal, Colors::Cyan);
 
 	NodePtr startNode = std::make_shared<Node>();
 	NodePtr endNode = std::make_shared<Node>();
@@ -94,40 +119,72 @@ PathResult AStarPather::compute_path(PathRequest& request)
 	startNode->heuristicCost = calc_heuristic_cost(startNode->position, endNode->position, heuristicMode);
 	endNode->heuristicCost = 0.0f;
 
-
 	// A* Pathfinding
-	openList.push(startNode);
+	openList.push_back(startNode);
 	while (!openList.empty())
 	{
-		auto minNode = openList.top();
-		openList.pop();
+		sort_list(openList);
+		iter_swap(openList.begin(), openList.end() - 1);
+		auto minNode = openList.back();
+		openList.pop_back();
+		closeList.push_back(minNode);
+		terrain->set_color(minNode->position, Colors::Yellow);
 
 		// path is found.
 		if (minNode->position == goal)
 		{
+			//auto 
+			std::vector<GridPos> waypoints = generate_waypoints(minNode);
+
+			for (auto waypoint : waypoints)
+			{
+				request.path.push_back(terrain->get_world_position(waypoint));
+			}
 
 			return PathResult::COMPLETE;
 		}
 
 		// process neighbors
 		auto neighbors = get_neighbors(minNode);
+		for (auto neighbor : neighbors)
+		{
+			auto itrOpen = std::find_if(openList.begin(), openList.end(), [neighbor](NodePtr node) { return node->position == neighbor->position; });
+			bool isOnOpenList = itrOpen != openList.end();
+			auto itrClose = std::find_if(closeList.begin(), closeList.end(), [neighbor](NodePtr node) { return node->position == neighbor->position; });
+			bool isOnCloseList = itrClose != closeList.end();
 
+			if (!isOnOpenList && !isOnCloseList)
+			{
+				openList.push_back(neighbor);
+				terrain->set_color(neighbor->position, Colors::Blue);
+			}
+			else
+			{
+				if (isOnOpenList)
+				{
+					auto& nodeOnlist = *itrOpen;
+					if (neighbor->getFinalCost() < nodeOnlist->getFinalCost())
+					{
+						nodeOnlist->givenCost = neighbor->givenCost;
+						nodeOnlist->parent = neighbor->parent;
+					}
+				}
+
+				if (isOnCloseList)
+				{
+					auto& nodeOnlist = *itrClose;
+					if (neighbor->getFinalCost() < nodeOnlist->getFinalCost())
+					{
+						nodeOnlist->givenCost = neighbor->givenCost;
+						nodeOnlist->parent = neighbor->parent;
+					}
+				}
+			}
+		}
 
 	}
 
-
-
-
-	// Just sample code, safe to delete
-
-
-	terrain->set_color(start, Colors::Orange);
-	terrain->set_color(goal, Colors::Cyan);
-
-	request.path.push_back(request.start);
-	request.path.push_back(request.goal);
-
-	return PathResult::COMPLETE;
+	return PathResult::IMPOSSIBLE;
 }
 
 std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
@@ -136,26 +193,29 @@ std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
 
 	GridPos currPos = currNode->position;
 
-	int botBound = currPos.row - 1, upBound = currPos.row + 1,
+	int botBound = currPos.row - 1, topBound = currPos.row + 1,
 		leftBound = currPos.col - 1, rightBound = currPos.col + 1;
 
 
 	// check hori & vert first
-	GridPos upPos(currPos.row + 1, currPos.col);
 	GridPos botPos(currPos.row - 1, currPos.col);
+	GridPos topPos(currPos.row + 1, currPos.col);
 	GridPos leftPos(currPos.row, currPos.col - 1);
 	GridPos rightPos(currPos.row, currPos.col + 1);
 
-	if (!terrain->is_valid_grid_position(upPos) || terrain->is_wall(upPos)) { upBound -= 1; }
+	// narrow down the double for loop if there is a wall on left/right/bottom/top
+	if (!terrain->is_valid_grid_position(topPos) || terrain->is_wall(topPos)) { topBound -= 1; }
 	if (!terrain->is_valid_grid_position(botPos) || terrain->is_wall(botPos)) { botBound += 1; }
 	if (!terrain->is_valid_grid_position(leftPos) || terrain->is_wall(leftPos)) { leftBound += 1; }
 	if (!terrain->is_valid_grid_position(rightPos) || terrain->is_wall(rightPos)) { rightBound -= 1; }
 
-	for (int i = botBound; i <= upBound; ++i)
+	for (int i = botBound; i <= topBound; ++i)
 	{
 		for (int j = leftBound; j <= rightBound; ++j)
 		{
 			GridPos neighborPos(i, j);
+
+			if (currNode->parent && neighborPos == currNode->parent->position) { continue; }
 
 			if (neighborPos == currPos || terrain->is_wall(neighborPos)) { continue; }
 
@@ -171,6 +231,8 @@ std::vector<NodePtr> AStarPather::get_neighbors(NodePtr currNode)
 	return result;
 }
 
+#define SQRT_2 1.414f
+
 float AStarPather::calc_heuristic_cost(GridPos start, GridPos end, Heuristic type)
 {
 	float xDiff = static_cast<float>(abs(start.row - end.row));
@@ -179,7 +241,7 @@ float AStarPather::calc_heuristic_cost(GridPos start, GridPos end, Heuristic typ
 	switch (type)
 	{
 	case Heuristic::OCTILE:
-		return std::min(xDiff, yDiff) + (std::max(xDiff, yDiff) - std::min(xDiff, yDiff)) * 1.41f;
+		return std::min(xDiff, yDiff) * 1.414f + (std::max(xDiff, yDiff) - std::min(xDiff, yDiff));
 	case Heuristic::CHEBYSHEV:
 		return std::max(xDiff, yDiff);
 	case Heuristic::MANHATTAN:
@@ -192,4 +254,25 @@ float AStarPather::calc_heuristic_cost(GridPos start, GridPos end, Heuristic typ
 
 	assert(0);
 	return -1.0f;
+}
+
+void AStarPather::sort_list(std::vector<NodePtr>& list)
+{
+	std::make_heap(list.begin(), list.end(), NodeComparer());
+}
+
+std::vector<GridPos> AStarPather::generate_waypoints(NodePtr goal)
+{
+	std::vector<GridPos> waypoints;
+
+	auto currNode = goal;
+	while (currNode)
+	{
+		waypoints.push_back(currNode->position);
+		currNode = currNode->parent;
+	}
+
+	std::reverse(waypoints.begin(), waypoints.end());
+
+	return waypoints;
 }

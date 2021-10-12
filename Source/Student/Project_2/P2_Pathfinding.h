@@ -26,12 +26,14 @@ public:
 		makes sense to you.
 	*/
 
-	std::vector<NodePtr> get_neighbors(NodePtr minNode);
+	std::vector<NodePtr> get_neighbors(NodePtr minNode);	// TODO:  swap tail and pre allocate --optimization
 	float calc_heuristic_cost(GridPos start, GridPos end, Heuristic type = Heuristic::OCTILE);
+	void sort_list(std::vector<NodePtr>& list);
+	std::vector<GridPos> generate_waypoints(NodePtr goal);
 
-	std::priority_queue<NodePtr> openList;
+	std::vector<NodePtr> openList;
+	std::vector<NodePtr> closeList;
 	GridPos start;
 	GridPos goal;
-	Heuristic heuristicMode = Heuristic::MANHATTAN;
-
+	Heuristic heuristicMode = Heuristic::OCTILE;
 };
