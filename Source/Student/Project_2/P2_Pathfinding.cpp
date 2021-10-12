@@ -89,34 +89,32 @@ PathResult AStarPather::compute_path(PathRequest& request)
 			IMPOSSIBLE - a path from start to goal does not exist, do not add start position to path
 	*/
 
-
-
 	if (request.newRequest)
 	{
 		openList.clear();
 		closeList.clear();
+		start = terrain->get_grid_position(request.start);
+		goal = terrain->get_grid_position(request.goal);
+
+		heuristicMode = request.settings.heuristic;
+		weight = request.settings.weight;
+
+		DEBUG_COLORING(start, Colors::Orange, request.settings.debugColoring);
+		DEBUG_COLORING(goal, Colors::Cyan, request.settings.debugColoring);
+
+		NodePtr startNode = std::make_shared<Node>();
+		NodePtr endNode = std::make_shared<Node>();
+		startNode->position = start;
+		endNode->position = goal;
+
+		startNode->givenCost = 0.0f;
+		startNode->heuristicCost = calc_heuristic_cost(startNode->position, endNode->position, heuristicMode);
+		endNode->heuristicCost = 0.0f;
+
+		// A* Pathfinding
+		openList.push_back(startNode);
 	}
-	heuristicMode = request.settings.heuristic;
-	weight = request.settings.weight;
 
-
-
-	start = terrain->get_grid_position(request.start);
-	goal = terrain->get_grid_position(request.goal);
-	DEBUG_COLORING(start, Colors::Orange, request.settings.debugColoring);
-	DEBUG_COLORING(goal, Colors::Cyan, request.settings.debugColoring);
-
-	NodePtr startNode = std::make_shared<Node>();
-	NodePtr endNode = std::make_shared<Node>();
-	startNode->position = start;
-	endNode->position = goal;
-
-	startNode->givenCost = 0.0f;
-	startNode->heuristicCost = calc_heuristic_cost(startNode->position, endNode->position, heuristicMode);
-	endNode->heuristicCost = 0.0f;
-
-	// A* Pathfinding
-	openList.push_back(startNode);
 	while (!openList.empty())
 	{
 		sort_list(openList);
@@ -135,6 +133,11 @@ PathResult AStarPather::compute_path(PathRequest& request)
 			for (auto waypoint : waypoints)
 			{
 				request.path.push_back(terrain->get_world_position(waypoint));
+			}
+
+			if (request.settings.rubberBanding)
+			{
+
 			}
 
 			return PathResult::COMPLETE;
@@ -180,6 +183,10 @@ PathResult AStarPather::compute_path(PathRequest& request)
 			}
 		}
 
+		if (request.settings.singleStep)
+		{
+			return PathResult::PROCESSING;
+		}
 	}
 
 	return PathResult::IMPOSSIBLE;
