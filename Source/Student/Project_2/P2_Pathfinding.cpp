@@ -143,7 +143,7 @@ PathResult AStarPather::compute_path(PathRequest& request)
 			std::vector<Vec3> waypointsWS = get_waypoints_in_worldspace(waypoints);
 			if (request.settings.smoothing)
 			{
-				waypointsWS = smoothing(waypointsWS, false);
+				waypointsWS = smoothing(waypointsWS, request.settings.rubberBanding);
 			}
 
 			// add waypoint world position to request's path
@@ -355,18 +355,53 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 	assert(waypointCount >= 2);
 
 	std::vector<Vec3> result;
-
+	std::vector<Vec3> waypoints = originalWaypoints;
+	std::vector<Vec3> newWaypoints;
 	if (isRubberbanded)
 	{
-		// add points
+		// add points (use two points)
+		assert(terrain->get_map_width() == terrain->get_map_height());
+
+		float unitLength = terrain->mapSizeInWorld / static_cast<float>(terrain->get_map_width());
+		float seperationThreshold = unitLength * 1.5f;
+
+		int current = 0, next = current + 1;
+		while (next < waypointCount)
+		{
+			auto currentWaypoint = waypoints[current];
+			auto nextWaypoint = waypoints[next];
+
+			newWaypoints.push_back(currentWaypoint);
+
+			float seperation = Vec3::Distance(currentWaypoint, nextWaypoint);
+			Vec3 dir = nextWaypoint - currentWaypoint; dir.Normalize();
+
+			// keep adding new points here to fill the gaps
+			auto newWaypiont = currentWaypoint;
+			while (seperation > seperationThreshold)
+			{
+				newWaypiont += seperationThreshold * dir;
+				newWaypoints.push_back(newWaypiont);
+				seperation -= seperationThreshold;
+			}
+
+			current++;
+			next = current + 1;
+		}
+
+		// add the last waypoint
+		newWaypoints.push_back(waypoints[current]);
+
+		waypoints = newWaypoints;
+		waypointCount = waypoints.size();
 	}
 
 	// special case for only two waypints
 	if (waypointCount == 2)
 	{
 		auto firstIndex = 0, secondIndex = firstIndex, thirdIndex = firstIndex + 1, fourthIndex = thirdIndex;
-		auto first = originalWaypoints[firstIndex], second = originalWaypoints[secondIndex],
-			third = originalWaypoints[thirdIndex], fourth = originalWaypoints[fourthIndex];
+		auto first = waypoints[firstIndex], second = waypoints[secondIndex],
+			third = waypoints[thirdIndex], fourth = waypoints[fourthIndex];
 		auto firstPoint = Vec3::CatmullRom(first, second, third, fourth, 0.0f);
 		auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
 		auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
@@ -383,8 +418,8 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 
 	// special case for interpolation between first two nodes
 	auto firstIndex = 0, secondIndex = firstIndex, thirdIndex = firstIndex + 1, fourthIndex = firstIndex + 2;
-	auto first = originalWaypoints[firstIndex], second = originalWaypoints[secondIndex],
-		third = originalWaypoints[thirdIndex], fourth = originalWaypoints[fourthIndex];
+	auto first = waypoints[firstIndex], second = waypoints[secondIndex],
+		third = waypoints[thirdIndex], fourth = waypoints[fourthIndex];
 	auto firstPoint = Vec3::CatmullRom(first, second, third, fourth, 0.0f);
 	auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
 	auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
@@ -405,8 +440,8 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 			thirdIndex = fourthIndex = firstIndex + 2;
 		}
 
-		auto first = originalWaypoints[firstIndex], second = originalWaypoints[secondIndex],
-			third = originalWaypoints[thirdIndex], fourth = originalWaypoints[fourthIndex];
+		auto first = waypoints[firstIndex], second = waypoints[secondIndex],
+			third = waypoints[thirdIndex], fourth = waypoints[fourthIndex];
 		auto firstPoint = Vec3::CatmullRom(first, second, third, fourth, 0.0f);
 		auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
 		auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
@@ -418,9 +453,8 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 		result.push_back(thirdExtra);
 	}
 
-
-	// specialcase at end
-	result.push_back(originalWaypoints[waypointCount - 1]);
+	// special case at end
+	result.push_back(waypoints[waypointCount - 1]);
 
 	return result;
 }
