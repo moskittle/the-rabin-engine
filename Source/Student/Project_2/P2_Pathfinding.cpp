@@ -351,10 +351,8 @@ std::vector<GridPos> AStarPather::rubberband(std::vector<GridPos> waypoints)
 
 std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoints, bool isRubberbanded = false)
 {
-	if (originalWaypoints.size() < 4)
-	{
-		return originalWaypoints;
-	}
+	auto waypointCount = originalWaypoints.size();
+	assert(waypointCount >= 2);
 
 	std::vector<Vec3> result;
 
@@ -363,48 +361,65 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 		// add points
 	}
 
+	// special case for only two waypints
+	if (waypointCount == 2)
+	{
+		auto firstIndex = 0, secondIndex = firstIndex, thirdIndex = firstIndex + 1, fourthIndex = thirdIndex;
+		auto first = originalWaypoints[firstIndex], second = originalWaypoints[secondIndex],
+			third = originalWaypoints[thirdIndex], fourth = originalWaypoints[fourthIndex];
+		auto firstPoint = Vec3::CatmullRom(first, second, third, fourth, 0.0f);
+		auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
+		auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
+		auto thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
+		auto lastPoint = Vec3::CatmullRom(first, second, third, fourth, 1.0f);
+		result.push_back(firstPoint);
+		result.push_back(firstExtra);
+		result.push_back(secondExtra);
+		result.push_back(lastPoint);
 
-	// special case for first one
-	auto firstNode = originalWaypoints.begin();
-	auto first = *firstNode, second = *firstNode, third = *(firstNode + 1), fourth = *(firstNode + 2);
+		return result;
+	}
 
+	// special case for interpolation between first two nodes
+	auto firstIndex = 0, secondIndex = firstIndex, thirdIndex = firstIndex + 1, fourthIndex = firstIndex + 2;
+	auto first = originalWaypoints[firstIndex], second = originalWaypoints[secondIndex],
+		third = originalWaypoints[thirdIndex], fourth = originalWaypoints[fourthIndex];
+	auto firstPoint = Vec3::CatmullRom(first, second, third, fourth, 0.0f);
 	auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
 	auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
 	auto thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
-
-	result.push_back(second);
+	result.push_back(firstPoint);
 	result.push_back(firstExtra);
 	result.push_back(secondExtra);
 	result.push_back(thirdExtra);
 
-	// skip the first and last one. these two are special cases
-	for (auto current = originalWaypoints.begin() + 1; current != originalWaypoints.end() - 3; ++current)
+	// for loop
+	for (int i = 0; i < waypointCount - 2; ++i)
 	{
-		auto& first = *current, & second = *(current + 1), & third = *(current + 2), & fourth = *(current + 3);
+		auto firstIndex = i, secondIndex = firstIndex + 1, thirdIndex = firstIndex + 2, fourthIndex = firstIndex + 3;
 
+		// special case for interpolation between last two nodes
+		if (firstIndex == waypointCount - 3)
+		{
+			thirdIndex = fourthIndex = firstIndex + 2;
+		}
+
+		auto first = originalWaypoints[firstIndex], second = originalWaypoints[secondIndex],
+			third = originalWaypoints[thirdIndex], fourth = originalWaypoints[fourthIndex];
+		auto firstPoint = Vec3::CatmullRom(first, second, third, fourth, 0.0f);
 		auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
 		auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
 		auto thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
 
-		result.push_back(second);
-
+		result.push_back(firstPoint);
 		result.push_back(firstExtra);
 		result.push_back(secondExtra);
 		result.push_back(thirdExtra);
-
 	}
 
-	firstNode = originalWaypoints.end() - 3;
-	first = *firstNode, second = *firstNode, third = *(firstNode + 1), fourth = *(firstNode + 2);
 
-	firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
-	secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
-	thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
-
-	result.push_back(firstExtra);
-	result.push_back(secondExtra);
-	result.push_back(thirdExtra);
-	result.push_back(originalWaypoints[originalWaypoints.size() - 1]);
+	// specialcase at end
+	result.push_back(originalWaypoints[waypointCount - 1]);
 
 	return result;
 }
