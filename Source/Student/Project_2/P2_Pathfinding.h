@@ -30,9 +30,9 @@ public:
 	float calc_heuristic_cost(GridPos start, GridPos end, Heuristic type = Heuristic::OCTILE);
 	float calc_final_cost(NodePtr node);
 	void sort_list(std::vector<NodePtr>& list);
-	std::list<GridPos> generate_waypoints(NodePtr goal);
+	std::vector<GridPos> generate_waypoints(NodePtr goal);
 
-	void rubberband(std::list<GridPos>& waypoints);
+	std::vector<GridPos> rubberband(std::vector<GridPos> waypoints);
 
 	std::vector<NodePtr> openList;
 	std::vector<NodePtr> closeList;
