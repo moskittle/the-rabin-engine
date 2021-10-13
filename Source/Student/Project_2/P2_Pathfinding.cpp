@@ -127,19 +127,29 @@ PathResult AStarPather::compute_path(PathRequest& request)
 		// path is found.
 		if (minNode->position == goal)
 		{
-			//auto 
+			// backtracing to get path
 			std::vector<GridPos> waypoints = generate_waypoints(minNode);
 
+			// rubberband
 			if (request.settings.rubberBanding)
 			{
 				waypoints = rubberband(waypoints);
 			}
 
+			// reverse order
 			std::reverse(waypoints.begin(), waypoints.end());
 
-			for (auto waypoint : waypoints)
+			// smoothing
+			std::vector<Vec3> waypointsWS = get_waypoints_in_worldspace(waypoints);
+			if (request.settings.smoothing)
 			{
-				request.path.push_back(terrain->get_world_position(waypoint));
+				waypointsWS = smoothing(waypointsWS, false);
+			}
+
+			// add waypoint world position to request's path
+			for (auto waypointWS : waypointsWS)
+			{
+				request.path.push_back(waypointWS);
 			}
 
 			return PathResult::COMPLETE;
@@ -337,4 +347,76 @@ std::vector<GridPos> AStarPather::rubberband(std::vector<GridPos> waypoints)
 	result.push_back(waypoints[next]);	// add the last node
 
 	return result;
+}
+
+std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoints, bool isRubberbanded = false)
+{
+	if (originalWaypoints.size() < 4)
+	{
+		return originalWaypoints;
+	}
+
+	std::vector<Vec3> result;
+
+	if (isRubberbanded)
+	{
+		// add points
+	}
+
+
+	// special case for first one
+	auto firstNode = originalWaypoints.begin();
+	auto first = *firstNode, second = *firstNode, third = *(firstNode + 1), fourth = *(firstNode + 2);
+
+	auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
+	auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
+	auto thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
+
+	result.push_back(second);
+	result.push_back(firstExtra);
+	result.push_back(secondExtra);
+	result.push_back(thirdExtra);
+
+	// skip the first and last one. these two are special cases
+	for (auto current = originalWaypoints.begin() + 1; current != originalWaypoints.end() - 3; ++current)
+	{
+		auto& first = *current, & second = *(current + 1), & third = *(current + 2), & fourth = *(current + 3);
+
+		auto firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
+		auto secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
+		auto thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
+
+		result.push_back(second);
+
+		result.push_back(firstExtra);
+		result.push_back(secondExtra);
+		result.push_back(thirdExtra);
+
+	}
+
+	firstNode = originalWaypoints.end() - 3;
+	first = *firstNode, second = *firstNode, third = *(firstNode + 1), fourth = *(firstNode + 2);
+
+	firstExtra = Vec3::CatmullRom(first, second, third, fourth, 0.25f);
+	secondExtra = Vec3::CatmullRom(first, second, third, fourth, 0.5f);
+	thirdExtra = Vec3::CatmullRom(first, second, third, fourth, 0.75f);
+
+	result.push_back(firstExtra);
+	result.push_back(secondExtra);
+	result.push_back(thirdExtra);
+	result.push_back(originalWaypoints[originalWaypoints.size() - 1]);
+
+	return result;
+}
+
+std::vector<Vec3> AStarPather::get_waypoints_in_worldspace(const std::vector<GridPos>& waypoints)
+{
+	std::vector<Vec3> waypointsWS;
+
+	for (auto& waypoint : waypoints)
+	{
+		waypointsWS.push_back(terrain->get_world_position(waypoint));
+	}
+
+	return waypointsWS;
 }

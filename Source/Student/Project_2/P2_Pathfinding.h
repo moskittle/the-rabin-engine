@@ -33,6 +33,8 @@ public:
 	std::vector<GridPos> generate_waypoints(NodePtr goal);
 
 	std::vector<GridPos> rubberband(std::vector<GridPos> waypoints);
+	std::vector<Vec3> smoothing(const std::vector<Vec3>& originalWaypoints, bool isRubberbanded);
+	std::vector<Vec3> get_waypoints_in_worldspace(const std::vector<GridPos>& waypoints);
 
 	std::vector<NodePtr> openList;
 	std::vector<NodePtr> closeList;
