@@ -135,6 +135,8 @@ PathResult AStarPather::compute_path(PathRequest& request)
 				waypoints = rubberband(waypoints);
 			}
 
+			std::reverse(waypoints.begin(), waypoints.end());
+
 			for (auto waypoint : waypoints)
 			{
 				request.path.push_back(terrain->get_world_position(waypoint));
@@ -280,8 +282,6 @@ std::vector<GridPos> AStarPather::generate_waypoints(NodePtr goal)
 		currNode = currNode->parent;
 	}
 
-	std::reverse(waypoints.begin(), waypoints.end());
-
 	return waypoints;
 }
 
@@ -292,7 +292,7 @@ std::vector<GridPos> AStarPather::rubberband(std::vector<GridPos> waypoints)
 	auto nextNext = next + 1;
 
 	std::vector<GridPos> result({ waypoints[current] });
-	while (nextNext < waypoints.size() - 1)
+	while (nextNext < waypoints.size())
 	{
 		bool thereIsAWall = false;
 
@@ -300,18 +300,16 @@ std::vector<GridPos> AStarPather::rubberband(std::vector<GridPos> waypoints)
 		auto& nextPt = waypoints[next];
 		auto& nextNextPt = waypoints[nextNext];
 
-		auto leftBound = std::min(currPt.col, std::min(nextPt.col, nextNextPt.col));
-		auto rightBound = std::max(currPt.col, std::max(nextPt.col, nextNextPt.col));
-		auto botBound = std::min(currPt.row, std::min(nextPt.row, nextNextPt.row));
-		auto topBound = std::max(currPt.row, std::max(nextPt.row, nextNextPt.row));
+		auto leftBound = std::min(currPt.col, nextNextPt.col);
+		auto rightBound = std::max(currPt.col, nextNextPt.col);
+		auto botBound = std::min(currPt.row, nextNextPt.row);
+		auto topBound = std::max(currPt.row, nextNextPt.row);
 
-		GridPos pos;
 		for (auto i = leftBound; i <= rightBound; ++i)
 		{
 			for (auto j = botBound; j <= topBound; ++j)
 			{
-				pos.col = i;
-				pos.row = j;
+				GridPos pos(j, i);
 
 				if (terrain->is_wall(pos))
 				{
@@ -336,56 +334,7 @@ std::vector<GridPos> AStarPather::rubberband(std::vector<GridPos> waypoints)
 			nextNext = next + 1;
 		}
 	}
-
-	result.push_back(waypoints[nextNext]);	// add the last node
+	result.push_back(waypoints[next]);	// add the last node
 
 	return result;
-
-
-
-
-	//GridPos pos;
-	//auto current = waypoints.begin();
-	//current++;
-	//while (std::next(current, 1) != waypoints.end())
-	//{
-	//	bool thereIsAWall = false;
-
-	//	auto prevPos = *std::prev(current, 1);
-	//	auto currPos = *current;
-	//	auto nextPos = *std::next(current, 1);
-
-	//	auto leftBound = std::min(prevPos.col, std::min(currPos.col, nextPos.col));
-	//	auto rightBound = std::max(prevPos.col, std::max(currPos.col, nextPos.col));
-	//	auto botBound = std::min(prevPos.row, std::min(currPos.row, nextPos.row));
-	//	auto topBound = std::max(prevPos.row, std::max(currPos.row, nextPos.row));
-
-
-	//	for (auto i = leftBound; i <= rightBound; ++i)
-	//	{
-	//		for (auto j = botBound; j <= topBound; ++j)
-	//		{
-	//			pos.col = i;
-	//			pos.row = j;
-
-	//			if (terrain->is_wall(pos))
-	//			{
-	//				thereIsAWall = true;
-	//				break;
-	//			}
-	//		}
-
-	//		if (thereIsAWall) { break; }
-	//	}
-
-	//	if (!thereIsAWall)
-	//	{
-	//		waypoints.erase(current++);
-	//	}
-	//	else
-	//	{
-	//		++current;
-	//	}
-
-	//}
 }
