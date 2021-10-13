@@ -375,6 +375,7 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 		result.push_back(firstPoint);
 		result.push_back(firstExtra);
 		result.push_back(secondExtra);
+		result.push_back(thirdExtra);
 		result.push_back(lastPoint);
 
 		return result;
