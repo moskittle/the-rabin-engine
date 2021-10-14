@@ -356,7 +356,6 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 
 	std::vector<Vec3> result;
 	std::vector<Vec3> waypoints = originalWaypoints;
-	std::vector<Vec3> newWaypoints;
 	if (isRubberbanded)
 	{
 		// add points (use two points)
@@ -365,34 +364,28 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 		float unitLength = terrain->mapSizeInWorld / static_cast<float>(terrain->get_map_width());
 		float seperationThreshold = unitLength * 1.5f;
 
-		int current = 0, next = current + 1;
-		while (next < waypointCount)
+		std::list<Vec3> newWaypoints{ std::begin(waypoints), std::end(waypoints) };
+		auto curr = newWaypoints.begin(), next = std::next(curr, 1);
+		while (next != newWaypoints.end())
 		{
-			auto currentWaypoint = waypoints[current];
-			auto nextWaypoint = waypoints[next];
-
-			newWaypoints.push_back(currentWaypoint);
-
-			float seperation = Vec3::Distance(currentWaypoint, nextWaypoint);
-			Vec3 dir = nextWaypoint - currentWaypoint; dir.Normalize();
-
-			// keep adding new points here to fill the gaps
-			auto newWaypiont = currentWaypoint;
-			while (seperation > seperationThreshold)
+			if (Vec3::Distance(*curr, *next) > seperationThreshold)
 			{
-				newWaypiont += seperationThreshold * dir;
-				newWaypoints.push_back(newWaypiont);
-				seperation -= seperationThreshold;
+				auto midPoint = (*curr + *next) * 0.5f;
+				newWaypoints.insert(next, midPoint);
+				next = std::prev(next, 1);
 			}
-
-			current++;
-			next = current + 1;
+			else
+			{
+				curr++;
+				next++;
+			}
 		}
 
-		// add the last waypoint
-		newWaypoints.push_back(waypoints[current]);
 
-		waypoints = newWaypoints;
+		waypoints.clear();
+		waypoints.resize(newWaypoints.size());
+		std::copy(newWaypoints.begin(), newWaypoints.end(), waypoints.begin());
+
 		waypointCount = static_cast<int>(waypoints.size());
 	}
 
