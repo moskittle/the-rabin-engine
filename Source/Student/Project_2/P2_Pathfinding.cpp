@@ -351,7 +351,7 @@ std::vector<GridPos> AStarPather::rubberband(std::vector<GridPos> waypoints)
 
 std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoints, bool isRubberbanded = false)
 {
-	auto waypointCount = originalWaypoints.size();
+	int waypointCount = static_cast<int>(originalWaypoints.size());
 	assert(waypointCount >= 2);
 
 	std::vector<Vec3> result;
@@ -393,7 +393,7 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 		newWaypoints.push_back(waypoints[current]);
 
 		waypoints = newWaypoints;
-		waypointCount = waypoints.size();
+		waypointCount = static_cast<int>(waypoints.size());
 	}
 
 	// special case for only two waypints
@@ -437,7 +437,7 @@ std::vector<Vec3> AStarPather::smoothing(const std::vector<Vec3>& originalWaypoi
 		// special case for interpolation between last two nodes
 		if (firstIndex == waypointCount - 3)
 		{
-			thirdIndex = fourthIndex = firstIndex + 2;
+			firstIndex = waypointCount - 3; secondIndex = firstIndex + 1; thirdIndex = fourthIndex = secondIndex + 1;
 		}
 
 		auto first = waypoints[firstIndex], second = waypoints[secondIndex],
