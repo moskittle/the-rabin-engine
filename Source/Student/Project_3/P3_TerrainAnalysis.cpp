@@ -23,42 +23,42 @@ float distance_to_closest_wall(int row, int col)
 	*/
 
 	// WRITE YOUR CODE HERE
-	float distance = 0.0f;
 	float closestDistance = std::numeric_limits<float>::max();
-	int width = terrain->get_map_width(), height = terrain->get_map_height();
-	GridPos currentPos = GridPos(row, col);
 
 	int range = 1;
-	std::vector<GridPos> searchCells;
-	bool isWallFound = false;
-	for (int i = row - range; i <= row + range; ++i)
-	{
-		closestDistance = std::numeric_limits<float>::max();
-		for (int j = col - range; j <= col + range; ++j)
-		{
-			GridPos newNeighborPos = GridPos(i, j);
-			if (newNeighborPos == currentPos) { continue; }
+	int botBound = row - range, topBound = row + range;
+	int leftBound = col - range, rightBound = col + range;
+	int mapHeight = terrain->get_map_height();
+	int mapWidth = terrain->get_map_width();
+	bool wallFound = false;
 
-			if (terrain->is_valid_grid_position(newNeighborPos))
+	while ((botBound >= 0 || topBound < mapHeight) && (leftBound >= 0 || rightBound < mapWidth) && !wallFound)
+	{
+		for (int i = botBound; i <= topBound; ++i)
+		{
+			for (int j = leftBound; j <= rightBound; ++j)
 			{
-				if (terrain->is_wall(newNeighborPos))
+				GridPos currPos = GridPos(i, j);
+
+				// skip itself
+				if (currPos == GridPos(row, col)) { continue; }
+
+				if (!terrain->is_valid_grid_position(currPos) || terrain->is_wall(currPos))
 				{
-					int diffX = abs(currentPos.col - newNeighborPos.col);
-					int diffY = abs(currentPos.row - newNeighborPos.row);
-					distance = sqrt((float)(diffX * diffX + diffY * diffY));
-					closestDistance = std::min(closestDistance, distance);
-					isWallFound = true;
+					int xDiff = col - j;
+					int yDiff = row - i;
+					float currentDistance = (float)sqrt((float)(xDiff * xDiff + yDiff * yDiff));
+
+					closestDistance = std::min(currentDistance, closestDistance);
+					wallFound = true;
 				}
 			}
 		}
 
-		if (isWallFound) { break; }
-
 		range++;
-
-		if (range > width || range > height) { break; }
+		botBound = row - range, topBound = row + range;
+		leftBound = col - range, rightBound = col + range;
 	}
-
 
 	return closestDistance; // REPLACE THIS
 }
@@ -92,16 +92,13 @@ void analyze_openness(MapLayer<float>& layer)
 	int width = terrain->get_map_width();
 	int height = terrain->get_map_height();
 
-	for (int i = 0; i < width; ++i)
+	for (int i = 0; i < height; ++i)
 	{
-		for (int j = 0; j < height; ++j)
+		for (int j = 0; j < width; ++j)
 		{
 			GridPos currentPos = GridPos(i, j);
 
-			if (terrain->is_wall(currentPos))
-			{
-				continue;
-			}
+			if (terrain->is_wall(currentPos)) { continue; }
 
 			// fill color
 			float distance = distance_to_closest_wall(i, j);
