@@ -43,6 +43,7 @@ float distance_to_closest_wall(int row, int col)
 				// skip itself
 				if (currPos == GridPos(row, col)) { continue; }
 
+				// get distance if it is a wall or out of bounds
 				if (!terrain->is_valid_grid_position(currPos) || terrain->is_wall(currPos))
 				{
 					int xDiff = col - j;
@@ -68,15 +69,61 @@ bool is_clear_path(int row0, int col0, int row1, int col1)
 	/*
 		Two cells (row0, col0) and (row1, col1) are visible to each other if a line
 		between their centerpoints doesn't intersect the four boundary lines of every
-		wall cell.  You should puff out the four boundary lines by a very tiny amount
+		//wall cell.  You should puff out the four boundary lines by a very tiny amount
 		so that a diagonal line passing by the corner will intersect it.  Make use of the
 		line_intersect helper function for the intersection test and the is_wall member
 		function in the global terrain to determine if a cell is a wall or not.
 	*/
 
 	// WRITE YOUR CODE HERE
+	int botBound = std::min(row0, row1), topBound = std::max(row0, row1);
+	int leftBound = std::min(col0, col1), rightBound = std::max(col0, col1);
 
-	return false; // REPLACE THIS
+	// 1. get a line between center points
+	Vec2 startPoint = Vec2((float)row0, (float)col0);
+	Vec2 endPoint = Vec2((float)row1, (float)col1);
+
+	for (int i = botBound; i <= topBound; ++i)
+	{
+		for (int j = leftBound; j <= rightBound; ++j)
+		{
+			GridPos currPos = GridPos(i, j);
+
+			if (terrain->is_wall(currPos))
+			{
+				// 4 boundaries
+				Vec2 centerPos = Vec2((float)currPos.row, (float)currPos.col);
+				Vec2 p0 = centerPos + Vec2(-1.0f, -1.0f) * 0.5f;
+				Vec2 p1 = centerPos + Vec2(-1.0f, 1.0f) * 0.5f;
+				Vec2 p2 = centerPos + Vec2(1.0f, 1.0f) * 0.5f;
+				Vec2 p3 = centerPos + Vec2(1.0f, -1.0f) * 0.5f;
+
+				// check intersection with four lines
+				if (line_intersect(startPoint, endPoint, p0, p1))
+				{
+					return false;
+				}
+
+				if (line_intersect(startPoint, endPoint, p1, p2))
+				{
+					return false;
+				}
+
+				if (line_intersect(startPoint, endPoint, p2, p3))
+				{
+					return false;
+				}
+
+				if (line_intersect(startPoint, endPoint, p3, p0))
+				{
+					return false;
+				}
+
+			}
+		}
+	}
+
+	return true; // REPLACE THIS
 }
 
 void analyze_openness(MapLayer<float>& layer)
@@ -88,7 +135,6 @@ void analyze_openness(MapLayer<float>& layer)
 	*/
 
 	// WRITE YOUR CODE HERE
-
 	int width = terrain->get_map_width();
 	int height = terrain->get_map_height();
 
@@ -120,7 +166,39 @@ void analyze_visibility(MapLayer<float>& layer)
 		helper function.
 	*/
 
-	// WRITE YOUR CODE HERE
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
+
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos currentCell = GridPos(i, j);
+
+			if (terrain->is_wall(currentCell)) { continue; }
+
+			// check this cell with all other cells
+			int visibleCount = 0;
+			for (int m = 0; m < height; ++m)
+			{
+				for (int n = 0; n < width; ++n)
+				{
+					GridPos testCell = GridPos(m, n);
+
+					if (terrain->is_wall(testCell) || currentCell == testCell) { continue; }
+
+					if (is_clear_path(i, j, m, n))
+					{
+						visibleCount++;
+					}
+				}
+			}
+
+			float visibility = (float)visibleCount / 160.0f;
+			visibility = std::min(visibility, 1.0f);
+			layer.set_value(i, j, visibility);
+		}
+	}
 }
 
 void analyze_visible_to_cell(MapLayer<float>& layer, int row, int col)
