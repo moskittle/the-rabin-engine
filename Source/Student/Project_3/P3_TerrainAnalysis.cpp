@@ -320,6 +320,19 @@ void analyze_agent_vision(MapLayer<float>& layer, const Agent* agent)
 
 			if (terrain->is_wall(testCell) || currCell == testCell) { continue; }
 
+			// check view direction
+			auto pathDirection = Vec2((float)currCell.row, (float)currCell.col) - Vec2((float)i, (float)j);
+			pathDirection.Normalize();
+
+			auto agentForward_v3 = agent->get_forward_vector();
+			auto agentForward = Vec2(agentForward_v3.x, agentForward_v3.z);
+			agentForward.Normalize();
+
+			if (pathDirection.Dot(agentForward) > std::cosf(180.0f))
+			{
+				continue;
+			}
+
 			if (is_clear_path(i, j, currCell.row, currCell.col))
 			{
 				layer.set_value(i, j, 1.0f);
