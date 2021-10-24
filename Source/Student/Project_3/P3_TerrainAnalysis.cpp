@@ -215,7 +215,6 @@ void analyze_visible_to_cell(MapLayer<float>& layer, int row, int col)
 		helper function.
 	*/
 
-	// WRITE YOUR CODE HERE
 	GridPos currCell = GridPos(row, col);
 
 	int width = terrain->get_map_width();
@@ -305,6 +304,30 @@ void analyze_agent_vision(MapLayer<float>& layer, const Agent* agent)
 	*/
 
 	// WRITE YOUR CODE HERE
+	auto agentWorldPos = agent->get_position();
+	GridPos currCell = terrain->get_grid_position(agentWorldPos);
+
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
+
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			if (terrain->is_wall(currCell)) { continue; }
+
+			GridPos testCell = GridPos(i, j);
+
+			if (terrain->is_wall(testCell) || currCell == testCell) { continue; }
+
+			if (is_clear_path(i, j, currCell.row, currCell.col))
+			{
+				layer.set_value(i, j, 1.0f);
+			}
+		}
+	}
+
+
 }
 
 void propagate_solo_occupancy(MapLayer<float>& layer, float decay, float growth)
