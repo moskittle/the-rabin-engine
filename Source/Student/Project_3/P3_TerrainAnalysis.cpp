@@ -5,6 +5,8 @@
 #include "Terrain/MapLayer.h"
 #include "Projects/ProjectThree.h"
 
+#include "P3_util.h"
+
 #include <iostream>
 
 bool ProjectThree::implemented_fog_of_war() const // extra credit
@@ -214,6 +216,134 @@ void analyze_visible_to_cell(MapLayer<float>& layer, int row, int col)
 	*/
 
 	// WRITE YOUR CODE HERE
+	GridPos currCell = GridPos(row, col);
+
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
+
+	std::vector<std::vector<float>> visibility(height, std::vector<float>(width, 0.0f));
+
+	// 1. calculate fully visible cells
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos cell = GridPos(i, j);
+
+			if (terrain->is_wall(cell)) { continue; }
+
+			visibility[i][j] = is_clear_path(currCell.row, currCell.col, cell.row, cell.col) ? 1.0f : 0.0f;
+		}
+	}
+
+	// 2. calculate half visible cells
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos cell = GridPos(i, j);
+			if (terrain->is_wall(cell)) { continue; }
+
+			// 2.1 propagate half visibility to neighbor if the cell is visible
+			if (fabs(visibility[i][j] - 1.0f) < 0.001f)
+			{
+				// turn non-visible neighbors to visible cells
+				int bot = i - 1, top = i + 1, left = j - 1, right = j + 1;
+				GridPos botNeighbor(bot, j), topNeighbor(top, j), leftNeighbor(i, left), rightNeighbor(i, right);
+				bool botWallFlag = false, topWallFlag = false, leftWallFlag = false, rightWallFlag = false;
+
+				// 2.1.1 check direct neighbors (non-diagonal)
+				P3_util::CheckDirectNeighbor(botNeighbor, botWallFlag, visibility);
+				P3_util::CheckDirectNeighbor(topNeighbor, topWallFlag, visibility);
+				P3_util::CheckDirectNeighbor(leftNeighbor, leftWallFlag, visibility);
+				P3_util::CheckDirectNeighbor(rightNeighbor, rightWallFlag, visibility);
+
+				// 2.1.2 check diagonal neighbors
+				GridPos botLeft(bot, left), botRight(bot, right), topLeft(top, left), topRight(top, right);
+
+				P3_util::CheckDiagonalNeighbor(botLeft, botWallFlag || leftWallFlag, visibility);
+				P3_util::CheckDiagonalNeighbor(botRight, botWallFlag || rightWallFlag, visibility);
+				P3_util::CheckDiagonalNeighbor(topLeft, topWallFlag || leftWallFlag, visibility);
+				P3_util::CheckDiagonalNeighbor(topRight, topWallFlag || rightWallFlag, visibility);
+
+				//if (terrain->is_valid_grid_position(botLeft))
+				//{
+				//	if (terrain->is_wall(botLeft)) { continue; }
+
+				//	if (leftWallFlag || botWallFlag) { continue; }
+
+				//	if (fabs(visibility[botLeft.row][botLeft.col] - 1.0f) < 0.001f) { continue; }
+				//	visibility[botLeft.row][botLeft.col] = 0.5f;
+				//}
+
+				//if (terrain->is_valid_grid_position(botNeighbor))
+				//{
+				//	if (terrain->is_wall(botNeighbor))
+				//	{
+				//		botWallFlag = true;
+				//	}
+				//	else
+				//	{
+				//		if (fabs(visibility[botNeighbor.row][botNeighbor.col] - 1.0f) < 0.001f) { continue; }
+				//		visibility[botNeighbor.row][botNeighbor.col] = 0.5f;
+				//	}
+				//}
+
+				//if (terrain->is_valid_grid_position(topNeighbor))
+				//{
+				//	if (terrain->is_wall(topNeighbor))
+				//	{
+				//		topWallFlag = true;
+				//	}
+				//	else
+				//	{
+				//		if (fabs(visibility[topNeighbor.row][topNeighbor.col] - 1.0f) < 0.001f) { continue; }
+				//		visibility[topNeighbor.row][topNeighbor.col] = 0.5f;
+				//	}
+				//}
+
+				//if (terrain->is_valid_grid_position(leftNeighbor))
+				//{
+				//	if (terrain->is_wall(leftNeighbor))
+				//	{
+				//		leftWallFlag = true;
+				//	}
+				//	else
+				//	{
+				//		if (fabs(visibility[leftNeighbor.row][leftNeighbor.col] - 1.0f) < 0.001f) { continue; }
+				//		visibility[leftNeighbor.row][leftNeighbor.col] = 0.5f;
+				//	}
+				//}
+
+				//if (terrain->is_valid_grid_position(rightNeighbor))
+				//{
+				//	if (terrain->is_wall(rightNeighbor))
+				//	{
+				//		rightWallFlag = true;
+				//	}
+				//	else
+				//	{
+				//		if (fabs(visibility[rightNeighbor.row][rightNeighbor.col] - 1.0f) < 0.001f) { continue; }
+				//		visibility[rightNeighbor.row][rightNeighbor.col] = 0.5f;
+				//	}
+				//}
+			}
+		}
+	}
+
+	// 3. fill color
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos cell = GridPos(i, j);
+
+			if (terrain->is_wall(cell)) { continue; }
+
+			layer.set_value(i, j, visibility[i][j]);
+		}
+	}
+
 }
 
 void analyze_agent_vision(MapLayer<float>& layer, const Agent* agent)

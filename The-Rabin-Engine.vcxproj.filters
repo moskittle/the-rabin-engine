@@ -335,6 +335,7 @@
     <ClInclude Include="Source\Student\Project_1\Leaf\L_Chaseball.h" />
     <ClInclude Include="Source\Student\Project_2\AStarNode.h" />
     <ClInclude Include="Source\Student\Project_2\Node.h" />
+    <ClInclude Include="Source\Student\Project_3\P3_util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Framework\Main.cpp">
