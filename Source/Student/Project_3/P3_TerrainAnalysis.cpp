@@ -265,68 +265,6 @@ void analyze_visible_to_cell(MapLayer<float>& layer, int row, int col)
 				P3_util::CheckDiagonalNeighbor(botRight, botWallFlag || rightWallFlag, visibility);
 				P3_util::CheckDiagonalNeighbor(topLeft, topWallFlag || leftWallFlag, visibility);
 				P3_util::CheckDiagonalNeighbor(topRight, topWallFlag || rightWallFlag, visibility);
-
-				//if (terrain->is_valid_grid_position(botLeft))
-				//{
-				//	if (terrain->is_wall(botLeft)) { continue; }
-
-				//	if (leftWallFlag || botWallFlag) { continue; }
-
-				//	if (fabs(visibility[botLeft.row][botLeft.col] - 1.0f) < 0.001f) { continue; }
-				//	visibility[botLeft.row][botLeft.col] = 0.5f;
-				//}
-
-				//if (terrain->is_valid_grid_position(botNeighbor))
-				//{
-				//	if (terrain->is_wall(botNeighbor))
-				//	{
-				//		botWallFlag = true;
-				//	}
-				//	else
-				//	{
-				//		if (fabs(visibility[botNeighbor.row][botNeighbor.col] - 1.0f) < 0.001f) { continue; }
-				//		visibility[botNeighbor.row][botNeighbor.col] = 0.5f;
-				//	}
-				//}
-
-				//if (terrain->is_valid_grid_position(topNeighbor))
-				//{
-				//	if (terrain->is_wall(topNeighbor))
-				//	{
-				//		topWallFlag = true;
-				//	}
-				//	else
-				//	{
-				//		if (fabs(visibility[topNeighbor.row][topNeighbor.col] - 1.0f) < 0.001f) { continue; }
-				//		visibility[topNeighbor.row][topNeighbor.col] = 0.5f;
-				//	}
-				//}
-
-				//if (terrain->is_valid_grid_position(leftNeighbor))
-				//{
-				//	if (terrain->is_wall(leftNeighbor))
-				//	{
-				//		leftWallFlag = true;
-				//	}
-				//	else
-				//	{
-				//		if (fabs(visibility[leftNeighbor.row][leftNeighbor.col] - 1.0f) < 0.001f) { continue; }
-				//		visibility[leftNeighbor.row][leftNeighbor.col] = 0.5f;
-				//	}
-				//}
-
-				//if (terrain->is_valid_grid_position(rightNeighbor))
-				//{
-				//	if (terrain->is_wall(rightNeighbor))
-				//	{
-				//		rightWallFlag = true;
-				//	}
-				//	else
-				//	{
-				//		if (fabs(visibility[rightNeighbor.row][rightNeighbor.col] - 1.0f) < 0.001f) { continue; }
-				//		visibility[rightNeighbor.row][rightNeighbor.col] = 0.5f;
-				//	}
-				//}
 			}
 		}
 	}
