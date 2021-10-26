@@ -360,6 +360,56 @@ void propagate_solo_occupancy(MapLayer<float>& layer, float decay, float growth)
 	*/
 
 	// WRITE YOUR CODE HERE
+	float tempLayerValues[40][40];
+
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
+
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos currCell(i, j);
+			if (terrain->is_wall(currCell)) { continue; }
+
+			std::vector<GridPos> directNeighborCells({ GridPos(i + 1, j), GridPos(i - 1, j), GridPos(i, j - 1), GridPos(i, j + 1) });	// top, bot, left, right
+			std::vector<GridPos> diagonalNeighborCells({ GridPos(i + 1, j - 1), GridPos(i + 1, j + 1), GridPos(i - 1, j - 1), GridPos(i - 1, j + 1) });	// topLeft, topRight, botLeft, botRight
+			float maxInfluence = 0.0f;
+			// calculate direct neighbor cells
+			for (auto& neighborCell : directNeighborCells)
+			{
+				if (!terrain->is_valid_grid_position(neighborCell) || terrain->is_wall(neighborCell)) { continue; }
+				float distance = 1.0f;
+				float newInfluence = layer.get_value(neighborCell) * expf(-1.0f * distance * decay);
+				maxInfluence = std::max(maxInfluence, newInfluence);
+			}
+
+			// calculate diagonal neighbor cells
+			for (auto& neighborCell : diagonalNeighborCells)
+			{
+				if (!terrain->is_valid_grid_position(neighborCell) || terrain->is_wall(neighborCell)) { continue; }
+				float distance = 1.414f;	// sqrt of 2
+				float newInfluence = layer.get_value(neighborCell) * expf(-1.0f * distance * decay);
+				maxInfluence = std::max(maxInfluence, newInfluence);
+			}
+
+			// Growth
+			float oldInfluence = layer.get_value(currCell);
+			tempLayerValues[i][j] = lerp(oldInfluence, maxInfluence, growth);
+		}
+	}
+
+	// copy tempLayerValues to layer
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			auto currCell = GridPos(i, j);
+			if (terrain->is_wall(currCell)) { continue; }
+
+			layer.set_value(currCell, tempLayerValues[i][j]);
+		}
+	}
 }
 
 void propagate_dual_occupancy(MapLayer<float>& layer, float decay, float growth)
