@@ -372,26 +372,46 @@ void propagate_solo_occupancy(MapLayer<float>& layer, float decay, float growth)
 			GridPos currCell(i, j);
 			if (terrain->is_wall(currCell)) { continue; }
 
-			std::vector<GridPos> directNeighborCells({ GridPos(i + 1, j), GridPos(i - 1, j), GridPos(i, j - 1), GridPos(i, j + 1) });	// top, bot, left, right
-			std::vector<GridPos> diagonalNeighborCells({ GridPos(i + 1, j - 1), GridPos(i + 1, j + 1), GridPos(i - 1, j - 1), GridPos(i - 1, j + 1) });	// topLeft, topRight, botLeft, botRight
-			float maxInfluence = 0.0f;
+			//std::vector<GridPos> diagonalNeighborCells({ GridPos(i + 1, j - 1), GridPos(i + 1, j + 1), GridPos(i - 1, j - 1), GridPos(i - 1, j + 1) });	// topLeft, topRight, botLeft, botRight
+			GridPos topCell(i + 1, j), botCell(i - 1, j), leftCell(i, j - 1), rightCell(i, j + 1);
+			GridPos topLeftCell(i + 1, j - 1), topRightCell(i + 1, j + 1), botLeftCell(i - 1, j - 1), botRightCell(i - 1, j + 1);
+			bool topWallFlag = false, botWallFlag = false, leftWallFlag = false, rightWallFlag = false;
+
+			float maxInfluence = 0.0f, newInfluence = 0.0f;
+
 			// calculate direct neighbor cells
-			for (auto& neighborCell : directNeighborCells)
-			{
-				if (!terrain->is_valid_grid_position(neighborCell) || terrain->is_wall(neighborCell)) { continue; }
-				float distance = 1.0f;
-				float newInfluence = layer.get_value(neighborCell) * expf(-1.0f * distance * decay);
-				maxInfluence = std::max(maxInfluence, newInfluence);
-			}
+			newInfluence = P3_util::CalcDirectInfluence(layer, decay, topCell, topWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			newInfluence = P3_util::CalcDirectInfluence(layer, decay, botCell, botWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			newInfluence = P3_util::CalcDirectInfluence(layer, decay, leftCell, leftWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			newInfluence = P3_util::CalcDirectInfluence(layer, decay, rightCell, rightWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
 
 			// calculate diagonal neighbor cells
-			for (auto& neighborCell : diagonalNeighborCells)
-			{
-				if (!terrain->is_valid_grid_position(neighborCell) || terrain->is_wall(neighborCell)) { continue; }
-				float distance = 1.414f;	// sqrt of 2
-				float newInfluence = layer.get_value(neighborCell) * expf(-1.0f * distance * decay);
-				maxInfluence = std::max(maxInfluence, newInfluence);
-			}
+			newInfluence = P3_util::CalcDiagonalInfluence(layer, decay, topLeftCell, topWallFlag || leftWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			newInfluence = P3_util::CalcDiagonalInfluence(layer, decay, topRightCell, topWallFlag || rightWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			newInfluence = P3_util::CalcDiagonalInfluence(layer, decay, botLeftCell, botWallFlag || leftWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			newInfluence = P3_util::CalcDiagonalInfluence(layer, decay, botRightCell, botWallFlag || rightWallFlag);
+			maxInfluence = std::max(maxInfluence, newInfluence);
+
+			//for (auto& neighborCell : diagonalNeighborCells)
+			//{
+			//	if (!terrain->is_valid_grid_position(neighborCell) || terrain->is_wall(neighborCell)) { continue; }
+			//	float distance = 1.414f;	// sqrt of 2
+			//	float newInfluence = layer.get_value(neighborCell) * expf(-1.0f * distance * decay);
+			//	maxInfluence = std::max(maxInfluence, newInfluence);
+			//}
 
 			// Growth
 			float oldInfluence = layer.get_value(currCell);
@@ -442,6 +462,31 @@ void normalize_solo_occupancy(MapLayer<float>& layer)
 	*/
 
 	// WRITE YOUR CODE HERE
+
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
+	float maxInfluence = 0.0f;
+
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			maxInfluence = std::max(maxInfluence, layer.get_value(GridPos(i, j)));
+		}
+	}
+
+	if (fabs(maxInfluence - 0.0f) < 0.001)
+	{
+		for (int i = 0; i < height; ++i)
+		{
+			for (int j = 0; j < width; ++j)
+			{
+				float currInfluence = layer.get_value(GridPos(i, j));
+				layer.set_value(GridPos(i, j), currInfluence / maxInfluence);
+			}
+		}
+	}
+
 }
 
 void normalize_dual_occupancy(MapLayer<float>& layer)

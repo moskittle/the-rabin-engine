@@ -33,5 +33,38 @@ namespace P3_util
 		}
 	}
 
+	float CalcDirectInfluence(MapLayer<float>& layer, float decay, GridPos directNeighbor, bool& flag)
+	{
+		if (terrain->is_valid_grid_position(directNeighbor))
+		{
+			if (terrain->is_wall(directNeighbor))
+			{
+				flag = true;
+				return 0.0f;
+			}
+
+			float distance = 1.0f;
+			return layer.get_value(directNeighbor) * expf(-1.0f * distance * decay);
+		}
+
+		return 0.0f;
+	}
+
+	float CalcDiagonalInfluence(MapLayer<float>& layer, float decay, GridPos diagonalNeighbor, bool flag)
+	{
+		if (terrain->is_valid_grid_position(diagonalNeighbor))
+		{
+			if (terrain->is_wall(diagonalNeighbor) || flag)
+			{
+				return 0.0f;
+			}
+
+			float distance = 1.414f; // sqrt of 2
+			return layer.get_value(diagonalNeighbor) * expf(-1.0f * distance * decay);
+		}
+
+		return 0.0f;
+	}
+
 
 }
