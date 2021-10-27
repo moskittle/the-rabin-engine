@@ -328,14 +328,12 @@ void analyze_agent_vision(MapLayer<float>& layer, const Agent* agent)
 			auto agentForward = Vec2(agentForward_v3.x, agentForward_v3.z);
 			agentForward.Normalize();
 
-			if (pathDirection.Dot(agentForward) > std::cosf(180.0f))
+			if (pathDirection.Dot(agentForward) < std::cosf(180.0f))
 			{
-				continue;
-			}
-
-			if (is_clear_path(i, j, currCell.row, currCell.col))
-			{
-				layer.set_value(i, j, 1.0f);
+				if (is_clear_path(i, j, currCell.row, currCell.col))
+				{
+					layer.set_value(i, j, 1.0f);
+				}
 			}
 		}
 	}
@@ -513,6 +511,61 @@ void enemy_field_of_view(MapLayer<float>& layer, float fovAngle, float closeDist
 	*/
 
 	// WRITE YOUR CODE HERE
+
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
+
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos currCell(i, j);
+
+			if (layer.get_value(currCell) < 0.0f)
+			{
+				layer.set_value(currCell, 0.0f);
+			}
+		}
+	}
+
+	auto enemyWorldPos = enemy->get_position();
+	auto enemyCell = terrain->get_grid_position(enemyWorldPos);
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos currCell(i, j);
+			if (!terrain->is_valid_grid_position(currCell)) { continue; }
+			if (terrain->is_wall(currCell) || enemyCell == currCell) { continue; }
+
+			// check distance
+			float distance = Vec2::Distance(Vec2((float)enemyCell.row, (float)enemyCell.col), Vec2((float)currCell.row, (float)currCell.col));
+			if (distance < closeDistance)
+			{
+				if (is_clear_path(currCell.row, currCell.col, enemyCell.row, enemyCell.col))
+				{
+					layer.set_value(currCell, occupancyValue);
+				}
+			}
+			else
+			{
+				// check fov
+				Vec2 currCellDir = Vec2((float)enemyCell.row, (float)enemyCell.col) - Vec2((float)currCell.row, (float)currCell.col);
+				currCellDir.Normalize();
+
+				Vec3 enemyForward_v3 = enemy->get_forward_vector();
+				Vec2 enemyForward = Vec2(enemyForward_v3.x, enemyForward_v3.z);
+				enemyForward.Normalize();
+
+				if (enemyForward.Dot(currCellDir) < std::cosf(fovAngle))
+				{
+					layer.set_value(currCell, occupancyValue);
+				}
+			}
+		}
+	}
+
+
 }
 
 bool enemy_find_player(MapLayer<float>& layer, AStarAgent* enemy, Agent* player)
