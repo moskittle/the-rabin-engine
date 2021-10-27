@@ -321,14 +321,15 @@ void analyze_agent_vision(MapLayer<float>& layer, const Agent* agent)
 			if (terrain->is_wall(testCell) || currCell == testCell) { continue; }
 
 			// check view direction
-			auto pathDirection = Vec2((float)currCell.row, (float)currCell.col) - Vec2((float)i, (float)j);
+			Vec2 pathDirection = Vec2((float)i, (float)j) - Vec2((float)currCell.row, (float)currCell.col);
 			pathDirection.Normalize();
 
-			auto agentForward_v3 = agent->get_forward_vector();
-			auto agentForward = Vec2(agentForward_v3.x, agentForward_v3.z);
+			Vec3 agentForward_v3 = agent->get_forward_vector();
+			auto agentForward = Vec2((float)agentForward_v3.x, (float)agentForward_v3.z);
 			agentForward.Normalize();
 
-			if (pathDirection.Dot(agentForward) < std::cosf(180.0f))
+			float radian = 190.0f / 360.0f * PI;
+			if (pathDirection.Dot(agentForward) > cos(radian))
 			{
 				if (is_clear_path(i, j, currCell.row, currCell.col))
 				{
@@ -337,8 +338,6 @@ void analyze_agent_vision(MapLayer<float>& layer, const Agent* agent)
 			}
 		}
 	}
-
-
 }
 
 void propagate_solo_occupancy(MapLayer<float>& layer, float decay, float growth)
@@ -528,17 +527,18 @@ void enemy_field_of_view(MapLayer<float>& layer, float fovAngle, float closeDist
 		}
 	}
 
-	auto enemyWorldPos = enemy->get_position();
-	auto enemyCell = terrain->get_grid_position(enemyWorldPos);
+	Vec3 enemyWorldPos_v3 = enemy->get_position();
+	//Vec2 enemyWorldPos(enemyWorldPos_v3.x, enemyWorldPos_v3.z);
+	GridPos enemyCell = terrain->get_grid_position(enemyWorldPos_v3);
 	for (int i = 0; i < height; ++i)
 	{
 		for (int j = 0; j < width; ++j)
 		{
 			GridPos currCell(i, j);
 			if (!terrain->is_valid_grid_position(currCell)) { continue; }
-			if (terrain->is_wall(currCell) || enemyCell == currCell) { continue; }
+			if (terrain->is_wall(currCell)) { continue; }
 
-			// check distance
+			// if close enough, only check visibility. no need to consider fov.
 			float distance = Vec2::Distance(Vec2((float)enemyCell.row, (float)enemyCell.col), Vec2((float)currCell.row, (float)currCell.col));
 			if (distance < closeDistance)
 			{
@@ -549,15 +549,16 @@ void enemy_field_of_view(MapLayer<float>& layer, float fovAngle, float closeDist
 			}
 			else
 			{
-				// check fov
-				Vec2 currCellDir = Vec2((float)enemyCell.row, (float)enemyCell.col) - Vec2((float)currCell.row, (float)currCell.col);
+				// otherwise, take fov into account
+				Vec2 currCellDir = Vec2((float)currCell.row, (float)currCell.col) - Vec2((float)enemyCell.row, (float)enemyCell.col);
 				currCellDir.Normalize();
 
 				Vec3 enemyForward_v3 = enemy->get_forward_vector();
-				Vec2 enemyForward = Vec2(enemyForward_v3.x, enemyForward_v3.z);
+				Vec2 enemyForward(enemyForward_v3.x, enemyForward_v3.z);
 				enemyForward.Normalize();
 
-				if (enemyForward.Dot(currCellDir) < std::cosf(fovAngle))
+				float radian = fovAngle / 360.0f * PI;
+				if (currCellDir.Dot(enemyForward) > cos(radian))
 				{
 					if (is_clear_path(currCell.row, currCell.col, enemyCell.row, enemyCell.col))
 					{
@@ -612,6 +613,8 @@ bool enemy_seek_player(MapLayer<float>& layer, AStarAgent* enemy)
 
 	std::vector<GridPos> possibleLocations;
 	float maxInfluence = 0.0f;
+	//float maxInfluence = std::numeric_limits<float>::min();
+	;
 
 	// find possible locations with highest influence value
 	for (int i = 0; i < height; ++i)
@@ -620,12 +623,18 @@ bool enemy_seek_player(MapLayer<float>& layer, AStarAgent* enemy)
 		{
 			GridPos currCell(i, j);
 
+			if (terrain->is_wall(currCell) || layer.get_value(currCell) < 0.0f) { continue; }
+
 			float currInfluence = layer.get_value(currCell);
 			if (currInfluence > maxInfluence)
 			{
 				maxInfluence = currInfluence;
 
 				possibleLocations.clear();
+				possibleLocations.push_back(currCell);
+			}
+			else if (fabs(maxInfluence - currInfluence) < 0.01f)
+			{
 				possibleLocations.push_back(currCell);
 			}
 		}
