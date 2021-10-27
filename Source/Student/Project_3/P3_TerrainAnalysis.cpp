@@ -405,14 +405,6 @@ void propagate_solo_occupancy(MapLayer<float>& layer, float decay, float growth)
 			newInfluence = P3_util::CalcDiagonalInfluence(layer, decay, botRightCell, botWallFlag || rightWallFlag);
 			maxInfluence = std::max(maxInfluence, newInfluence);
 
-			//for (auto& neighborCell : diagonalNeighborCells)
-			//{
-			//	if (!terrain->is_valid_grid_position(neighborCell) || terrain->is_wall(neighborCell)) { continue; }
-			//	float distance = 1.414f;	// sqrt of 2
-			//	float newInfluence = layer.get_value(neighborCell) * expf(-1.0f * distance * decay);
-			//	maxInfluence = std::max(maxInfluence, newInfluence);
-			//}
-
 			// Growth
 			float oldInfluence = layer.get_value(currCell);
 			tempLayerValues[i][j] = lerp(oldInfluence, maxInfluence, growth);
@@ -475,7 +467,7 @@ void normalize_solo_occupancy(MapLayer<float>& layer)
 		}
 	}
 
-	if (fabs(maxInfluence - 0.0f) < 0.001)
+	if (maxInfluence > 0.0f)
 	{
 		for (int i = 0; i < height; ++i)
 		{
