@@ -559,13 +559,14 @@ void enemy_field_of_view(MapLayer<float>& layer, float fovAngle, float closeDist
 
 				if (enemyForward.Dot(currCellDir) < std::cosf(fovAngle))
 				{
-					layer.set_value(currCell, occupancyValue);
+					if (is_clear_path(currCell.row, currCell.col, enemyCell.row, enemyCell.col))
+					{
+						layer.set_value(currCell, occupancyValue);
+					}
 				}
 			}
 		}
 	}
-
-
 }
 
 bool enemy_find_player(MapLayer<float>& layer, AStarAgent* enemy, Agent* player)
@@ -606,6 +607,51 @@ bool enemy_seek_player(MapLayer<float>& layer, AStarAgent* enemy)
 	*/
 
 	// WRITE YOUR CODE HERE
+	int width = terrain->get_map_width();
+	int height = terrain->get_map_height();
 
-	return false; // REPLACE THIS
+	std::vector<GridPos> possibleLocations;
+	float maxInfluence = 0.0f;
+
+	// find possible locations with highest influence value
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			GridPos currCell(i, j);
+
+			float currInfluence = layer.get_value(currCell);
+			if (currInfluence > maxInfluence)
+			{
+				maxInfluence = currInfluence;
+
+				possibleLocations.clear();
+				possibleLocations.push_back(currCell);
+			}
+		}
+	}
+
+	// choose the closest one
+	if (possibleLocations.size() > 0)
+	{
+		float minDistance = std::numeric_limits<float>::max();
+		GridPos enemyCell = terrain->get_grid_position(enemy->get_position());
+		GridPos target;
+		Vec2 enemyPos((float)enemyCell.row, (float)enemyCell.col);
+		for (auto& location : possibleLocations)
+		{
+			float distance = Vec2::Distance(enemyPos, Vec2((float)location.row, (float)location.col));
+
+			if (distance < minDistance)
+			{
+				target = location;
+				minDistance = distance;
+			}
+		}
+
+		enemy->path_to(terrain->get_world_position(target));
+		return true;
+	}
+
+	return false;
 }
