@@ -471,6 +471,9 @@ void normalize_solo_occupancy(MapLayer<float>& layer)
 			for (int j = 0; j < width; ++j)
 			{
 				float currInfluence = layer.get_value(GridPos(i, j));
+
+				if (currInfluence < 0.0f) { continue; }
+
 				layer.set_value(GridPos(i, j), currInfluence / maxInfluence);
 			}
 		}
@@ -612,9 +615,7 @@ bool enemy_seek_player(MapLayer<float>& layer, AStarAgent* enemy)
 	int height = terrain->get_map_height();
 
 	std::vector<GridPos> possibleLocations;
-	float maxInfluence = 0.0f;
-	//float maxInfluence = std::numeric_limits<float>::min();
-	;
+	float maxInfluence = std::numeric_limits<float>::min();
 
 	// find possible locations with highest influence value
 	for (int i = 0; i < height; ++i)
